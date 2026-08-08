@@ -3,22 +3,34 @@ import { runScrapingTask, saveScrapedEvents, SCRAPE_SOURCES } from '@/lib/scrape
 
 export async function GET(request: NextRequest) {
   try {
+    const authHeader = request.headers.get('Authorization');
     const searchParams = request.nextUrl.searchParams;
     const key = searchParams.get('key');
     const secretKey = process.env.CRON_SECRET || 'local_development_secret';
 
-    // Verify trigger authentication
-    if (key !== secretKey) {
+    // Verify trigger authentication (both URL key and Vercel Cron Bearer header)
+    const isAuthorized = (key === secretKey) || (authHeader === `Bearer ${secretKey}`);
+    if (!isAuthorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const limitParam = searchParams.get('limit');
-    const limit = limitParam ? parseInt(limitParam, 10) : 5; // default to run 5 sources per execution to prevent serverless timeout
+    const limit = limitParam ? parseInt(limitParam, 10) : 5;
     const offsetParam = searchParams.get('offset');
-    const offset = offsetParam ? parseInt(offsetParam, 10) : 0;
 
-    // Slice sources for sequential execution to avoid hitting serverless timeouts (e.g. 10s on Vercel Hobby)
-    const sourcesToRun = SCRAPE_SOURCES.slice(offset, offset + limit);
+    let sourcesToRun;
+    let nextOffset = 0;
+
+    if (offsetParam !== null) {
+      const offset = parseInt(offsetParam, 10);
+      sourcesToRun = SCRAPE_SOURCES.slice(offset, offset + limit);
+      nextOffset = offset + limit >= SCRAPE_SOURCES.length ? 0 : offset + limit;
+    } else {
+      // Stateless Vercel Cron: pick 5 random sources on each trigger to distribute crawls evenly
+      const shuffled = [...SCRAPE_SOURCES].sort(() => 0.5 - Math.random());
+      sourcesToRun = shuffled.slice(0, limit);
+    }
+
     const summary: any[] = [];
 
     for (const source of sourcesToRun) {
@@ -39,7 +51,7 @@ export async function GET(request: NextRequest) {
       success: true,
       processedCount: sourcesToRun.length,
       totalSourcesCount: SCRAPE_SOURCES.length,
-      nextOffset: offset + limit >= SCRAPE_SOURCES.length ? 0 : offset + limit,
+      nextOffset,
       summary
     }, { status: 200 });
 
