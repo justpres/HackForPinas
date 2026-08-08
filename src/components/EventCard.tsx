@@ -29,14 +29,15 @@ export function EventCard({ event, className }: EventCardProps) {
     }
   };
 
-  const getPlaceholderColor = (organizerType?: string) => {
+  const getPlaceholderImage = (organizerType?: string) => {
     switch (organizerType?.toLowerCase()) {
       case 'government':
-        return 'bg-blue-600/10 text-blue-600';
+        return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600&auto=format&fit=crop'; // Tech network globe
       case 'university':
-        return 'bg-purple-600/10 text-purple-600';
+        return 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format&fit=crop'; // Students collaborating
+      case 'private':
       default:
-        return 'bg-slate-600/10 text-slate-600';
+        return 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=600&auto=format&fit=crop'; // Corporate software engineering hub
     }
   };
 
@@ -56,22 +57,12 @@ export function EventCard({ event, className }: EventCardProps) {
         }}
       >
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
-          {event.poster_image_url ? (
-            <img
-              src={event.poster_image_url}
-              alt={event.title}
-              className="h-full w-full object-cover transition-transform duration-250 group-hover:scale-105"
-            />
-          ) : (
-            <div
-              className={cn(
-                'flex h-full w-full items-center justify-center text-3xl font-bold uppercase',
-                getPlaceholderColor(event.organizer?.organizer_type)
-              )}
-            >
-              {event.title.substring(0, 2)}
-            </div>
-          )}
+          <img
+            src={event.poster_image_url || getPlaceholderImage(event.organizer?.organizer_type)}
+            alt={event.title}
+            className="h-full w-full object-cover transition-transform duration-250 group-hover:scale-105"
+            loading="lazy"
+          />
           <div className="absolute right-2 top-2">
             <CountdownBadge deadline={event.deadline} />
           </div>

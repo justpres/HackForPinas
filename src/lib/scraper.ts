@@ -42,6 +42,7 @@ interface ScrapeResult {
   event_end?: string;
   region?: string;
   format?: 'online' | 'in-person' | 'hybrid';
+  poster_image_url?: string;
 }
 
 export async function runScrapingTask(source: ScrapeSource): Promise<ScrapeResult[]> {
@@ -79,13 +80,19 @@ async function scrapeWordPressApi(source: ScrapeSource): Promise<ScrapeResult[]>
     const rawText = post.content?.rendered || '';
     const cleanText = rawText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     
+    // Extract first image in post content
+    const imgRegex = /<img[^>]+src="([^">]+)"/;
+    const imgMatch = rawText.match(imgRegex);
+    const featuredImage = imgMatch ? imgMatch[1] : undefined;
+    
     return {
       title: post.title?.rendered?.replace(/&#\d+;/g, '') || 'Hackathon Post',
       description: cleanText.slice(0, 300) + (cleanText.length > 300 ? '...' : ''),
       redirect_url: post.link || source.url,
       source_url: source.url,
       event_start: post.date,
-      format: cleanText.toLowerCase().includes('online') ? 'online' : 'in-person'
+      format: cleanText.toLowerCase().includes('online') ? 'online' : 'in-person',
+      poster_image_url: featuredImage
     };
   });
 }
@@ -159,7 +166,8 @@ async function scrapeGdgApi(source: ScrapeSource): Promise<ScrapeResult[]> {
     event_start: event.start_date,
     event_end: event.end_date,
     format: event.event_type === 'Virtual' ? 'online' : 'in-person',
-    region: event.chapter?.city || 'NCR'
+    region: event.chapter?.city || 'NCR',
+    poster_image_url: event.cropped_picture_url || event.picture?.url || event.logo?.url || undefined
   }));
 }
 
@@ -209,6 +217,15 @@ async function scrapeEventbriteHtml(source: ScrapeSource): Promise<ScrapeResult[
 }
 
 function parseEventbriteEvent(eventJson: any, sourceUrl: string): ScrapeResult {
+  let imageUrl: string | undefined;
+  if (typeof eventJson.image === 'string') {
+    imageUrl = eventJson.image;
+  } else if (Array.isArray(eventJson.image) && typeof eventJson.image[0] === 'string') {
+    imageUrl = eventJson.image[0];
+  } else if (eventJson.image && typeof eventJson.image === 'object') {
+    imageUrl = eventJson.image.url || eventJson.image.contentUrl;
+  }
+
   return {
     title: eventJson.name || 'Eventbrite Hackathon',
     description: eventJson.description || '',
@@ -216,7 +233,8 @@ function parseEventbriteEvent(eventJson: any, sourceUrl: string): ScrapeResult {
     source_url: sourceUrl,
     event_start: eventJson.startDate,
     event_end: eventJson.endDate,
-    format: eventJson.eventAttendanceMode?.includes('Online') ? 'online' : 'in-person'
+    format: eventJson.eventAttendanceMode?.includes('Online') ? 'online' : 'in-person',
+    poster_image_url: imageUrl
   };
 }
 
@@ -267,6 +285,16 @@ async function scrapeHtmlGeneric(source: ScrapeSource): Promise<ScrapeResult[]> 
       title = title.replace(/\s+/g, ' ').trim();
       const cleanDesc = surroundingText.replace(/\s+/g, ' ').trim();
 
+      // Look for any image inside the surrounding block to use as cover thumbnail
+      let imgUrl = surroundingBlock.find('img').first().attr('src');
+      if (imgUrl && !imgUrl.startsWith('http')) {
+        try {
+          imgUrl = new URL(imgUrl, source.url).toString();
+        } catch {
+          imgUrl = undefined;
+        }
+      }
+
       // Extract basic date context if available (standard Philippine formats)
       const dateRegex = /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2}(, \d{4})?/gi;
       const dates = cleanDesc.match(dateRegex);
@@ -278,7 +306,8 @@ async function scrapeHtmlGeneric(source: ScrapeSource): Promise<ScrapeResult[]> 
           redirect_url: absoluteUrl,
           source_url: source.url,
           event_start: dates?.[0] ? new Date(dates[0]).toISOString() : undefined,
-          format: cleanDesc.toLowerCase().includes('online') ? 'online' : 'in-person'
+          format: cleanDesc.toLowerCase().includes('online') ? 'online' : 'in-person',
+          poster_image_url: imgUrl
         });
       }
     }
@@ -363,7 +392,8 @@ export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResu
           event_end: eventEnd,
           deadline: eventStart, // fallback deadline to start if missing
           source_type: 'official_site',
-          status: 'published'
+          status: 'published',
+          poster_image_url: event.poster_image_url
         })
         .select('id')
         .single();
