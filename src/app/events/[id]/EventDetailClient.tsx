@@ -238,7 +238,7 @@ export function EventDetailClient({ event }: EventDetailClientProps) {
         {/* ── Section 5: Trust & Verification Footer ──────────────── */}
         <section
           aria-label="Source verification"
-          className="mb-10 flex flex-col items-center justify-between gap-6 rounded-lg border bg-muted/30 p-6 sm:flex-row"
+          className="mb-10 rounded-lg border bg-muted/30 p-6"
         >
           <div className="flex flex-col gap-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -277,22 +277,6 @@ export function EventDetailClient({ event }: EventDetailClientProps) {
               </div>
             )}
           </div>
-
-          <a
-            href={event.redirect_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              'inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-md px-5 py-2.5 sm:w-auto',
-              'bg-primary text-primary-foreground text-sm font-medium',
-              'transition-colors hover:bg-primary/90',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
-              'min-h-[44px]'
-            )}
-          >
-            Register / View Source
-            <Icon icon="fluent:open-16-regular" width={16} />
-          </a>
         </section>
 
         {/* ── Section 6: GEO Structured Summary ───────────────────── */}
