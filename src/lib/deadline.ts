@@ -1,24 +1,48 @@
-import { differenceInDays, differenceInHours, isAfter } from "date-fns"
+import { differenceInDays, differenceInHours, isPast, format } from 'date-fns';
 
-export function getDeadlineUrgency(deadline: string): "neutral" | "amber" | "urgent" {
-  const now = new Date()
-  const end = new Date(deadline)
-  if (!isAfter(end, now)) return "urgent"
-  const hours = differenceInHours(end, now)
-  if (hours <= 48) return "urgent"
-  const days = differenceInDays(end, now)
-  if (days <= 7) return "amber"
-  return "neutral"
+/**
+ * Determines urgency level of a given deadline.
+ * @param deadline - ISO date string of the deadline.
+ * @returns Urgency level string.
+ */
+export function getDeadlineUrgency(deadline: string): 'urgent' | 'amber' | 'neutral' | 'expired' {
+  const date = new Date(deadline);
+  
+  if (isPast(date)) return 'expired';
+  
+  const hoursLeft = differenceInHours(date, new Date());
+  if (hoursLeft < 48) return 'urgent';
+  
+  const daysLeft = differenceInDays(date, new Date());
+  if (daysLeft < 7) return 'amber';
+  
+  return 'neutral';
 }
 
+/**
+ * Generates human-readable label for the time remaining until a deadline.
+ * @param deadline - ISO date string of the deadline.
+ * @returns Human-readable time left string.
+ */
 export function getDeadlineLabel(deadline: string): string {
-  const now = new Date()
-  const end = new Date(deadline)
-  if (!isAfter(end, now)) return "Closed"
-  const hours = differenceInHours(end, now)
-  if (hours < 24) return "Closes today"
-  if (hours < 48) return "Closes tomorrow"
-  const days = differenceInDays(end, now)
-  if (days === 1) return "1 day left"
-  return `${days} days left`
+  const date = new Date(deadline);
+  
+  if (isPast(date)) return 'Closed';
+  
+  const hoursLeft = differenceInHours(date, new Date());
+  
+  if (hoursLeft < 24) return 'Closes today';
+  if (hoursLeft < 48) return 'Closes tomorrow';
+  
+  const daysLeft = differenceInDays(date, new Date());
+  return `${daysLeft} days left`;
+}
+
+/**
+ * Formats a given deadline date.
+ * @param deadline - ISO date string of the deadline.
+ * @returns Formatted date string (MMM d, yyyy).
+ */
+export function formatDeadline(deadline: string): string {
+  return format(new Date(deadline), 'MMM d, yyyy');
 }

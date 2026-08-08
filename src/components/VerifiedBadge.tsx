@@ -1,22 +1,22 @@
-import { Icon } from "@iconify/react"
-import { cn } from "@/lib/utils"
+import { Icon } from '@iconify/react';
+import { cn } from '@/lib/utils';
 
 interface VerifiedBadgeProps {
-  variant?: "compact" | "full"
-  className?: string
+  variant?: 'compact' | 'full';
+  className?: string;
 }
 
-export function VerifiedBadge({ variant = "compact", className }: VerifiedBadgeProps) {
+export function VerifiedBadge({ variant = 'compact', className }: VerifiedBadgeProps) {
   return (
-    <span
+    <div
       className={cn(
-        "inline-flex items-center gap-1 rounded-[6px] bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground",
+        'inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium',
+        'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
         className
       )}
-      aria-label="Government Verified source"
     >
-      <Icon icon="fluent:shield-checkmark-16-filled" width={14} aria-hidden="true" />
-      {variant === "full" ? "Government Verified" : "Verified"}
-    </span>
-  )
+      <Icon icon="fluent:shield-checkmark-16-filled" width={16} />
+      {variant === 'full' ? 'Government Verified' : 'Verified'}
+    </div>
+  );
 }
