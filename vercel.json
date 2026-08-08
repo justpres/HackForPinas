@@ -2,7 +2,12 @@
   "crons": [
     {
       "path": "/api/scrape",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 */12 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/scrape/route.ts": {
+      "maxDuration": 60
+    }
+  }
 }
