@@ -377,6 +377,13 @@ export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResu
         if (isNaN(parsed)) eventEnd = undefined;
       }
 
+      // If we don't have a poster image, try to extract the Open Graph image from the target landing page
+      let posterUrl = event.poster_image_url;
+      if (!posterUrl && event.redirect_url) {
+        console.log(`Extracting landing page og:image for: ${event.title}`);
+        posterUrl = await scrapeOpenGraphImage(event.redirect_url);
+      }
+
       // Default values mapping
       const { data: newHack, error } = await supabase
         .from('hackathons')
@@ -393,7 +400,7 @@ export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResu
           deadline: eventStart, // fallback deadline to start if missing
           source_type: 'official_site',
           status: 'published',
-          poster_image_url: event.poster_image_url
+          poster_image_url: posterUrl
         })
         .select('id')
         .single();
@@ -421,4 +428,43 @@ export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResu
   }
 
   return { inserted, skipped };
+}
+
+// Helper to fetch and extract og:image from the target landing page
+async function scrapeOpenGraphImage(url: string): Promise<string | undefined> {
+  try {
+    // Avoid scraping social platforms or links that block simple scraping
+    if (url.includes('facebook.com') || url.includes('twitter.com') || url.includes('eventbrite.com') || url.includes('instagram.com')) {
+      return undefined;
+    }
+
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      signal: AbortSignal.timeout(5000) // fast 5s timeout to prevent thread blocking
+    });
+
+    if (!res.ok) return undefined;
+
+    const html = await res.text();
+    const $ = cheerio.load(html);
+
+    let ogImage = $('meta[property="og:image"]').attr('content') || 
+                  $('meta[name="twitter:image"]').attr('content') ||
+                  $('link[rel="image_src"]').attr('href');
+
+    if (ogImage && !ogImage.startsWith('http')) {
+      try {
+        ogImage = new URL(ogImage, url).toString();
+      } catch {
+        ogImage = undefined;
+      }
+    }
+
+    return ogImage || undefined;
+  } catch (err) {
+    console.error(`Failed to scrape Open Graph image for ${url}:`, err);
+    return undefined;
+  }
 }
