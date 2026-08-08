@@ -4,7 +4,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { HeroSection } from '@/components/HeroSection';
 import HomepageClient from './HomepageClient';
-export const revalidate = 60; // Revalidate page every 60 seconds
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -21,6 +21,8 @@ export default async function HomePage() {
       .order('deadline', { ascending: true });
 
     hackathons = (hackathonsData || []) as HackathonWithOrganizer[];
+    console.log("Supabase URL used in HomePage:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log("Fetched published hackathons count:", hackathons.length);
 
     // Fetch distinct organizers count
     const { count } = await supabase
