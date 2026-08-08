@@ -35,14 +35,14 @@ export async function POST(request: NextRequest) {
 
     // Validate URLs
     const isRedirectValid = await validateRedirectUrl(data.redirect_url);
-    if (!isRedirectValid) {
-      return NextResponse.json({ error: 'Invalid redirect URL' }, { status: 400 });
+    if (!isRedirectValid.valid) {
+      return NextResponse.json({ error: isRedirectValid.reason || 'Invalid redirect URL' }, { status: 400 });
     }
 
     if (data.source_url) {
       const isSourceValid = await validateRedirectUrl(data.source_url);
-      if (!isSourceValid) {
-        return NextResponse.json({ error: 'Invalid source URL' }, { status: 400 });
+      if (!isSourceValid.valid) {
+        return NextResponse.json({ error: isSourceValid.reason || 'Invalid source URL' }, { status: 400 });
       }
     }
 

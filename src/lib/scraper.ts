@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { isLiveUrl } from './redirect-validator';
 
 export interface ScrapeSource {
   id: string;
@@ -360,6 +361,14 @@ export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResu
         .maybeSingle();
 
       if (existingHackathon) {
+        skipped++;
+        continue;
+      }
+
+      // Verify reachability of redirect link before saving
+      const live = await isLiveUrl(event.redirect_url);
+      if (!live) {
+        console.warn(`Skipping crawled event "${event.title}" because redirect_url "${event.redirect_url}" is unreachable.`);
         skipped++;
         continue;
       }

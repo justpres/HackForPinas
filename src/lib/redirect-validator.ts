@@ -27,11 +27,38 @@ export function isAllowedDomain(url: string): { allowed: boolean; domain: string
 }
 
 /**
- * Validates a redirect URL, ensuring it is HTTPS and has an allowed domain.
- * @param url - The URL string to validate.
- * @returns Object containing validation result.
+ * Checks if a URL is actually live and reachable (returns a success status code < 400).
+ * @param url - The URL string to verify.
+ * @returns Promise resolving to boolean.
  */
-export function validateRedirectUrl(url: string): { valid: boolean; reason?: string; needsReview?: boolean } {
+export async function isLiveUrl(url: string): Promise<boolean> {
+  try {
+    // Exclude localhost/internal URLs to avoid loop issues
+    if (url.includes('localhost') || url.includes('127.0.0.1')) {
+      return true;
+    }
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      signal: AbortSignal.timeout(5000) // 5s timeout
+    });
+    
+    return res.status < 400;
+  } catch (error) {
+    console.warn(`Reachability check failed for ${url}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Validates a redirect URL, ensuring it is HTTPS, has an allowed domain, and is reachable.
+ * @param url - The URL string to validate.
+ * @returns Promise resolving to an object containing validation result.
+ */
+export async function validateRedirectUrl(url: string): Promise<{ valid: boolean; reason?: string; needsReview?: boolean }> {
   try {
     const parsedUrl = new URL(url);
     
@@ -42,7 +69,13 @@ export function validateRedirectUrl(url: string): { valid: boolean; reason?: str
     const { allowed } = isAllowedDomain(url);
     
     if (!allowed) {
-      return { valid: true, needsReview: true, reason: 'Domain not in allow-list' };
+      return { valid: false, reason: 'Domain not in allow-list' };
+    }
+
+    // Reachability check
+    const live = await isLiveUrl(url);
+    if (!live) {
+      return { valid: false, reason: 'URL is unreachable or broken' };
     }
 
     return { valid: true };
