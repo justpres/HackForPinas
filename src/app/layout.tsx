@@ -13,6 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://hackforpinas.vercel.app'),
   title: {
     default: "HackForPinas | Philippine Hackathon Directory",
     template: "%s | HackForPinas",
