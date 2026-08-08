@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { HackathonWithOrganizer } from '@/lib/types';
 import { CountdownBadge } from '@/components/CountdownBadge';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
+import { GenerativePattern } from '@/components/GenerativePattern';
 
 interface EventCardProps {
   event: HackathonWithOrganizer;
@@ -15,6 +16,7 @@ interface EventCardProps {
 
 export function EventCard({ event, className }: EventCardProps) {
   const shouldReduceMotion = useReducedMotion();
+  const hasImage = !!event.poster_image_url;
 
   const getFormatIcon = (format: string) => {
     switch (format.toLowerCase()) {
@@ -26,18 +28,6 @@ export function EventCard({ event, className }: EventCardProps) {
         return 'fluent:wifi-1-16-regular';
       default:
         return 'fluent:building-16-regular';
-    }
-  };
-
-  const getPlaceholderImage = (organizerType?: string) => {
-    switch (organizerType?.toLowerCase()) {
-      case 'government':
-        return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=600&auto=format&fit=crop'; // Tech network globe
-      case 'university':
-        return 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format&fit=crop'; // Students collaborating
-      case 'private':
-      default:
-        return 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=600&auto=format&fit=crop'; // Corporate software engineering hub
     }
   };
 
@@ -56,18 +46,42 @@ export function EventCard({ event, className }: EventCardProps) {
           boxShadow: 'var(--shadow-resting)',
         }}
       >
+        {/* Thumbnail area */}
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
-          <img
-            src={event.poster_image_url || getPlaceholderImage(event.organizer?.organizer_type)}
-            alt={event.title}
-            className="h-full w-full object-cover transition-transform duration-250 group-hover:scale-105"
-            loading="lazy"
-          />
+          {hasImage ? (
+            <img
+              src={event.poster_image_url!}
+              alt={event.title}
+              className="h-full w-full object-cover transition-transform duration-250 group-hover:scale-105"
+              loading="lazy"
+            />
+          ) : (
+            <div className="relative h-full w-full">
+              {/* Generative geometric background */}
+              <GenerativePattern
+                seed={event.title}
+                organizerType={event.organizer?.organizer_type}
+                className="h-full w-full transition-transform duration-250 group-hover:scale-105"
+              />
+              {/* Overlay with event initials */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="select-none text-2xl font-bold tracking-wider text-white/70 drop-shadow-md">
+                  {event.title
+                    .split(/\s+/)
+                    .filter((w) => w.length > 0)
+                    .slice(0, 3)
+                    .map((w) => w[0].toUpperCase())
+                    .join('')}
+                </span>
+              </div>
+            </div>
+          )}
           <div className="absolute right-2 top-2">
             <CountdownBadge deadline={event.deadline} />
           </div>
         </div>
 
+        {/* Content */}
         <div className="flex flex-1 flex-col gap-3 p-4">
           <div className="flex flex-col gap-1.5">
             <h3 className="line-clamp-2 text-base font-semibold leading-tight">
