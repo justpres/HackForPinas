@@ -40,6 +40,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_PH",
     siteName: "HackForPinas",
+    images: [
+      {
+        url: "/og-banner.jpg",
+        width: 1200,
+        height: 630,
+        alt: "HackForPinas — Philippine Hackathon Directory",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HackForPinas | Philippine Hackathon Directory",
+    description:
+      "Discover and join Philippine hackathons and tech competitions. Browse events from DICT, DOST, universities, and private organizers.",
+    images: ["/og-banner.jpg"],
   },
   robots: {
     index: true,
