@@ -363,7 +363,7 @@ export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResu
           event_end: eventEnd,
           deadline: eventStart, // fallback deadline to start if missing
           source_type: 'official_site',
-          status: 'pending_review'
+          status: 'published'
         })
         .select('id')
         .single();

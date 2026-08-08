@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         event_start: data.event_start,
         event_end: data.event_end,
         source_type: 'community_submitted',
-        status: 'pending_review',
+        status: 'published',
         poster_image_url: data.poster_image_url
       })
       .select()
