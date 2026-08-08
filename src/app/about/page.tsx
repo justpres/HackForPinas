@@ -6,6 +6,19 @@ import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
   title: 'About HackForPinas | HackForPinas',
+  description: 'Learn about HackForPinas — a free, public directory aggregating Philippine hackathon and tech competition events from government agencies, universities, and private organizers.',
+  openGraph: {
+    title: 'About HackForPinas',
+    description: 'A free, public directory aggregating Philippine hackathon and tech competition events from government agencies, universities, and private organizers.',
+    type: 'website',
+    locale: 'en_PH',
+    siteName: 'HackForPinas',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'About HackForPinas',
+    description: 'A free, public directory aggregating Philippine hackathon and tech competition events.',
+  },
 };
 
 export default function AboutPage() {

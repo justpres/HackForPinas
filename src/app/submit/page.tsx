@@ -5,6 +5,19 @@ import { SubmissionForm } from '@/components/SubmissionForm';
 
 export const metadata: Metadata = {
   title: 'Submit an Event | HackForPinas',
+  description: 'Submit a hackathon or tech competition event in the Philippines. Help the community discover new opportunities.',
+  openGraph: {
+    title: 'Submit an Event',
+    description: 'Submit a hackathon or tech competition event in the Philippines. Help the community discover new opportunities.',
+    type: 'website',
+    locale: 'en_PH',
+    siteName: 'HackForPinas',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Submit an Event | HackForPinas',
+    description: 'Submit a hackathon or tech competition event in the Philippines.',
+  },
 };
 
 export default function SubmitPage() {
