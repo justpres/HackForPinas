@@ -10,7 +10,6 @@ import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { Button } from '@/components/ui/button';
 import { HackathonWithOrganizer } from '@/lib/types';
 import { format } from 'date-fns';
-import { MOCK_HACKATHONS } from '@/lib/mock-data';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -30,13 +29,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     event = data as { title: string; description: string } | null;
   } catch (err) {
     // Ignore database query failure
-  }
-
-  if (!event) {
-    const mock = MOCK_HACKATHONS.find(h => h.id === id);
-    if (mock) {
-      event = { title: mock.title, description: mock.description };
-    }
   }
 
   if (!event) {
@@ -66,13 +58,6 @@ export default async function EventPage({ params }: PageProps) {
     event = data as HackathonWithOrganizer | null;
   } catch (err) {
     // Ignore database query failure
-  }
-
-  if (!event) {
-    const mock = MOCK_HACKATHONS.find(h => h.id === id);
-    if (mock) {
-      event = mock;
-    }
   }
 
   if (!event) {

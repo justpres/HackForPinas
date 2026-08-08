@@ -4,8 +4,6 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { HeroSection } from '@/components/HeroSection';
 import HomepageClient from './HomepageClient';
-import { MOCK_HACKATHONS } from '@/lib/mock-data';
-
 export const revalidate = 60; // Revalidate page every 60 seconds
 
 export default async function HomePage() {
@@ -31,14 +29,7 @@ export default async function HomePage() {
 
     organizerCount = count || 0;
   } catch (err) {
-    console.error('Error fetching from Supabase, falling back to mock data:', err);
-  }
-
-  // Fallback to mock data if DB is empty or query fails
-  if (hackathons.length === 0) {
-    hackathons = MOCK_HACKATHONS;
-    const uniqueOrgIds = new Set(MOCK_HACKATHONS.map(h => h.organizer_id));
-    organizerCount = uniqueOrgIds.size;
+    console.error('Error fetching from Supabase:', err);
   }
 
   // Calculate unique regions in published hackathons
