@@ -32,7 +32,7 @@ export function FilterBar({ filters, onChange, resultCount }: FilterBarProps) {
     (filters.organizer_type && filters.organizer_type !== 'all' ? 1 : 0);
 
   return (
-    <div className="sticky top-14 z-30 border-b bg-background/95 py-3 backdrop-blur-sm">
+    <div className="sticky top-16 z-30 border-b bg-background/95 py-3 backdrop-blur-sm">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-sm">

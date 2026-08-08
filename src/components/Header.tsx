@@ -23,13 +23,13 @@ export function Header() {
       <div className="h-0.5 animate-header-flow" />
       
       <div className="container mx-auto px-4">
-        <div className="flex h-14 items-center justify-between">
+        <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center">
             <Image
               src="/hackforPinasLogo.png"
               alt="HackForPinas Logo"
-              width={180}
-              height={45}
+              width={220}
+              height={55}
               className="object-contain rounded-md"
               priority
             />
