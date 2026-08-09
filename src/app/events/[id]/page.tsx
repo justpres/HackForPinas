@@ -77,55 +77,132 @@ export default async function EventPage({ params }: PageProps) {
     notFound();
   }
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Event',
-    name: event.title,
-    description: event.description,
-    startDate: event.event_start || event.deadline,
-    endDate: event.event_end || event.deadline,
-    eventStatus: 'https://schema.org/EventScheduled',
-    eventAttendanceMode:
-      event.format === 'online'
-        ? 'https://schema.org/OnlineEventAttendanceMode'
-        : event.format === 'in-person'
-        ? 'https://schema.org/OfflineEventAttendanceMode'
-        : 'https://schema.org/MixedEventAttendanceMode',
-    location:
-      event.format === 'online'
-        ? {
-            '@type': 'VirtualLocation',
-            url: event.redirect_url,
-          }
-        : {
-            '@type': 'Place',
-            name: event.region,
-            address: {
-              '@type': 'PostalAddress',
-              addressCountry: 'PH',
-              addressRegion: event.region,
-            },
+  const organizerName = event.organizer?.name || 'Organizer';
+  const organizerType = event.organizer?.organizer_type || 'private';
+  const formattedDeadline = event.deadline
+    ? new Date(event.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : 'TBA';
+  const formattedStart = event.event_start
+    ? new Date(event.event_start).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null;
+  const formattedEnd = event.event_end
+    ? new Date(event.event_end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null;
+
+  const formatLabel = (f: string) => {
+    switch (f) {
+      case 'online':
+        return 'online (virtual)';
+      case 'in-person':
+        return 'in-person (physical)';
+      case 'hybrid':
+        return 'hybrid (mix of online and physical)';
+      default:
+        return f;
+    }
+  };
+
+  const faqs = [
+    {
+      question: `When is the registration deadline for ${event.title}?`,
+      answer: `The deadline to register for ${event.title} is ${formattedDeadline}. You should complete your registration before this date to participate.`,
+    },
+    {
+      question: `Is ${event.title} online or in-person?`,
+      answer: `This hackathon is held in a ${formatLabel(
+        event.format
+      )} format, targeting participants within the ${
+        event.region
+      } region.`,
+    },
+    {
+      question: `Who is organizing ${event.title}?`,
+      answer: `${event.title} is organized by ${organizerName}, which is verified as a ${organizerType} organizer on HackForPinas.`,
+    },
+    {
+      question: `How do I register for ${event.title}?`,
+      answer: `You can register and view the official guidelines directly on the organizer's platform by visiting: ${
+        event.redirect_url || event.source_url
+      }`,
+    },
+    ...(formattedStart
+      ? [
+          {
+            question: `When does the ${event.title} event take place?`,
+            answer: `The coding event starts on ${formattedStart}${
+              formattedEnd ? ` and runs until ${formattedEnd}` : ''
+            }.`,
           },
-    organizer: {
-      '@type': 'Organization',
-      name: event.organizer?.name || 'Organizer',
-      url: event.organizer?.official_website || undefined,
-    },
-    ...(event.poster_image_url ? { image: event.poster_image_url } : {}),
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'PHP',
-      availability: 'https://schema.org/InStock',
-      url: event.redirect_url,
-    },
+        ]
+      : []),
+  ];
+
+  const graphJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Event',
+        '@id': `https://hackforpinas.vercel.app/events/${event.id}#event`,
+        name: event.title,
+        description: event.description,
+        startDate: event.event_start || event.deadline,
+        endDate: event.event_end || event.deadline,
+        eventStatus: 'https://schema.org/EventScheduled',
+        eventAttendanceMode:
+          event.format === 'online'
+            ? 'https://schema.org/OnlineEventAttendanceMode'
+            : event.format === 'in-person'
+            ? 'https://schema.org/OfflineEventAttendanceMode'
+            : 'https://schema.org/MixedEventAttendanceMode',
+        location:
+          event.format === 'online'
+            ? {
+                '@type': 'VirtualLocation',
+                url: event.redirect_url,
+              }
+            : {
+                '@type': 'Place',
+                name: event.region,
+                address: {
+                  '@type': 'PostalAddress',
+                  addressCountry: 'PH',
+                  addressRegion: event.region,
+                },
+              },
+        organizer: {
+          '@type': 'Organization',
+          name: organizerName,
+          url: event.organizer?.official_website || undefined,
+        },
+        ...(event.poster_image_url ? { image: event.poster_image_url } : {}),
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'PHP',
+          availability: 'https://schema.org/InStock',
+          url: event.redirect_url,
+        },
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': `https://hackforpinas.vercel.app/events/${event.id}#faq`,
+        mainEntity: faqs.map((faq) => ({
+          '@type': 'Question',
+          name: faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: faq.answer,
+          },
+        })),
+      },
+    ],
   };
 
   return (
     <div className="flex min-h-screen flex-col">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(graphJsonLd) }}
       />
       <Header />
       <main className="flex-1">

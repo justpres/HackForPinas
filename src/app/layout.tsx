@@ -71,8 +71,42 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const globalJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': 'https://hackforpinas.vercel.app/#website',
+        'url': 'https://hackforpinas.vercel.app',
+        'name': 'HackForPinas',
+        'description': 'A free, public directory aggregating Philippine hackathon and tech competition events.',
+        'publisher': {
+          '@id': 'https://hackforpinas.vercel.app/#organization'
+        },
+        'inLanguage': 'en-PH'
+      },
+      {
+        '@type': 'Organization',
+        '@id': 'https://hackforpinas.vercel.app/#organization',
+        'name': 'HackForPinas',
+        'url': 'https://hackforpinas.vercel.app',
+        'logo': {
+          '@type': 'ImageObject',
+          'url': 'https://hackforpinas.vercel.app/hackforpinastabico.ico'
+        },
+        'description': 'A community-driven open source project indexing technology hackathons across the Philippines.'
+      }
+    ]
+  };
+
   return (
     <html lang="en" className={cn("dark", inter.variable, "font-sans", geist.variable)} suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(globalJsonLd) }}
+        />
+      </head>
       <body className="min-h-screen bg-background text-foreground font-sans antialiased" suppressHydrationWarning>
         {children}
         <Toaster position="bottom-right" richColors />
@@ -80,3 +114,4 @@ export default function RootLayout({
     </html>
   );
 }
+

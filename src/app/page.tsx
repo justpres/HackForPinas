@@ -43,8 +43,55 @@ export default async function HomePage() {
     regions: uniqueRegions.size || 0,
   };
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hackforpinas.gg';
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    'numberOfItems': hackathons.length,
+    'itemListElement': hackathons.map((event, index) => ({
+      '@type': 'ListItem',
+      'position': index + 1,
+      'item': {
+        '@type': 'Event',
+        'name': event.title,
+        'url': `${baseUrl}/events/${event.id}`,
+        'startDate': event.event_start || event.deadline,
+        'endDate': event.event_end || event.deadline,
+        'eventAttendanceMode':
+          event.format === 'online'
+            ? 'https://schema.org/OnlineEventAttendanceMode'
+            : event.format === 'in-person'
+            ? 'https://schema.org/OfflineEventAttendanceMode'
+            : 'https://schema.org/MixedEventAttendanceMode',
+        'location':
+          event.format === 'online'
+            ? {
+                '@type': 'VirtualLocation',
+                'url': `${baseUrl}/events/${event.id}`,
+              }
+            : {
+                '@type': 'Place',
+                'name': event.region,
+                'address': {
+                  '@type': 'PostalAddress',
+                  'addressCountry': 'PH',
+                  'addressRegion': event.region,
+                },
+              },
+        'organizer': {
+          '@type': 'Organization',
+          'name': event.organizer?.name || 'Organizer',
+        },
+      },
+    })),
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
       <Header />
       <HeroSection stats={stats} />
       <main className="flex-1 py-8">
@@ -54,3 +101,4 @@ export default async function HomePage() {
     </div>
   );
 }
+

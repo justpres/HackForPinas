@@ -10,6 +10,7 @@ import { CountdownBadge } from '@/components/CountdownBadge';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { GenerativePattern } from '@/components/GenerativePattern';
 import { StickyActionBar } from '@/components/StickyActionBar';
+import { AeoAnswerBox } from '@/components/AeoAnswerBox';
 
 interface EventDetailClientProps {
   event: HackathonWithOrganizer;
@@ -278,6 +279,11 @@ export function EventDetailClient({ event }: EventDetailClientProps) {
             )}
           </div>
         </section>
+
+        {/* ── Section 5.5: AEO Answer Engine Summary ──────────────── */}
+        <div className="mb-10">
+          <AeoAnswerBox event={event} />
+        </div>
 
         {/* ── Section 6: GEO Structured Summary ───────────────────── */}
         <section className="mb-12 border-t border-border/10 pt-8" aria-label="Quick Summary Facts">
