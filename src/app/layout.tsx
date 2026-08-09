@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   },
   description:
     "A free, public directory aggregating Philippine hackathon and tech competition events from government agencies, universities, and private organizers.",
+  authors: [{ name: "justpres", url: "https://github.com/JustPres" }],
+  creator: "justpres",
+  publisher: "justpres",
   keywords: [
     "hackathon",
     "Philippines",
