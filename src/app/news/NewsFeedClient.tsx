@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion, AnimatePresence } from 'motion/react';
 import { Icon } from '@iconify/react';
 import { formatDistanceToNow } from 'date-fns';
 import { NewsItem } from '@/lib/news';
@@ -82,9 +82,7 @@ function NewsItemSkeleton() {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
           <div className="flex gap-2">
-            <div className="h-7 bg-muted/60 rounded-full w-14" />
-            <div className="h-7 bg-muted/60 rounded-full w-14" />
-            <div className="h-7 bg-muted/60 rounded-full w-14" />
+            <div className="h-7 bg-muted/60 rounded-full w-24" />
           </div>
           <div className="flex gap-3">
             <div className="h-6 bg-muted/60 rounded w-16" />
@@ -120,8 +118,13 @@ function NewsItemCard({
   onReact,
 }: NewsItemCardProps) {
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const trayEnterTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const trayLeaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const startTimer = () => {
+  const [showTray, setShowTray] = useState(false);
+
+  // Auto mark as read on hover/focus after 2s
+  const startReadTimer = () => {
     if (!isRead && !hoverTimerRef.current) {
       hoverTimerRef.current = setTimeout(() => {
         onMarkAsRead();
@@ -129,18 +132,78 @@ function NewsItemCard({
     }
   };
 
-  const clearTimer = () => {
+  const clearReadTimer = () => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
     }
   };
 
+  // Hover triggers for the Facebook-style Reaction Tray (500ms enter delay, 200ms leave delay)
+  const handleTriggerMouseEnter = () => {
+    if (trayLeaveTimerRef.current) {
+      clearTimeout(trayLeaveTimerRef.current);
+      trayLeaveTimerRef.current = null;
+    }
+    if (!showTray && !trayEnterTimerRef.current) {
+      trayEnterTimerRef.current = setTimeout(() => {
+        setShowTray(true);
+      }, 500); // 500ms delay to open
+    }
+  };
+
+  const handleTriggerMouseLeave = () => {
+    if (trayEnterTimerRef.current) {
+      clearTimeout(trayEnterTimerRef.current);
+      trayEnterTimerRef.current = null;
+    }
+    if (showTray && !trayLeaveTimerRef.current) {
+      trayLeaveTimerRef.current = setTimeout(() => {
+        setShowTray(false);
+      }, 200); // 200ms delay to close
+    }
+  };
+
+  const handleTrayMouseEnter = () => {
+    if (trayLeaveTimerRef.current) {
+      clearTimeout(trayLeaveTimerRef.current);
+      trayLeaveTimerRef.current = null;
+    }
+  };
+
+  const handleTrayMouseLeave = () => {
+    if (showTray && !trayLeaveTimerRef.current) {
+      trayLeaveTimerRef.current = setTimeout(() => {
+        setShowTray(false);
+      }, 200);
+    }
+  };
+
+  const selectReaction = (type: 'like' | 'fire' | 'rocket') => {
+    onReact(type);
+    setShowTray(false);
+    onMarkAsRead();
+    if (trayEnterTimerRef.current) clearTimeout(trayEnterTimerRef.current);
+    if (trayLeaveTimerRef.current) clearTimeout(trayLeaveTimerRef.current);
+  };
+
+  const handleDirectClick = () => {
+    // If user has an active reaction, clicking untoggles it
+    // If not, toggle standard 'like' reaction
+    const currentActive = getActiveReaction();
+    if (currentActive) {
+      onReact(currentActive);
+    } else {
+      onReact('like');
+    }
+    onMarkAsRead();
+  };
+
   useEffect(() => {
     return () => {
-      if (hoverTimerRef.current) {
-        clearTimeout(hoverTimerRef.current);
-      }
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      if (trayEnterTimerRef.current) clearTimeout(trayEnterTimerRef.current);
+      if (trayLeaveTimerRef.current) clearTimeout(trayLeaveTimerRef.current);
     };
   }, []);
 
@@ -151,14 +214,70 @@ function NewsItemCard({
   const words = (article.title + ' ' + article.description).split(/\s+/).length;
   const readingTime = Math.max(1, Math.ceil(words / 200));
 
+  // Determine current active reaction type for trigger button
+  const getActiveReaction = (): 'like' | 'fire' | 'rocket' | null => {
+    if (!reactionData?.userReacted) return null;
+    if (reactionData.userReacted.like) return 'like';
+    if (reactionData.userReacted.fire) return 'fire';
+    if (reactionData.userReacted.rocket) return 'rocket';
+    return null;
+  };
+
+  const activeReaction = getActiveReaction();
+
+  const getTriggerStyles = () => {
+    switch (activeReaction) {
+      case 'like':
+        return 'text-blue-500 bg-blue-500/10 border-blue-500/30';
+      case 'fire':
+        return 'text-orange-500 bg-orange-500/10 border-orange-500/30';
+      case 'rocket':
+        return 'text-indigo-500 bg-indigo-500/10 border-indigo-500/30';
+      default:
+        return 'bg-muted/40 text-muted-foreground border-border/40 hover:text-primary hover:bg-primary/5 hover:border-primary/20';
+    }
+  };
+
+  const getTriggerIcon = () => {
+    switch (activeReaction) {
+      case 'like':
+        return 'fluent:thumb-like-16-filled';
+      case 'fire':
+        return 'fluent:local-fire-16-filled';
+      case 'rocket':
+        return 'fluent:rocket-16-filled';
+      default:
+        return 'fluent:thumb-like-16-regular';
+    }
+  };
+
+  const getTriggerText = () => {
+    switch (activeReaction) {
+      case 'like':
+        return 'Liked';
+      case 'fire':
+        return 'Fire';
+      case 'rocket':
+        return 'Rocket';
+      default:
+        return 'React';
+    }
+  };
+
+  // Compile overall counts for reactions
+  const reactionTypes = ['like', 'fire', 'rocket'] as const;
+  const reactionsSummary = reactionTypes
+    .map((t) => ({ type: t, count: reactionData ? reactionData[t] : 0 }))
+    .filter((r) => r.count > 0);
+
   return (
     <motion.div
       variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } }}
       transition={{ duration: 0.25 }}
-      onMouseEnter={startTimer}
-      onMouseLeave={clearTimer}
-      onFocus={startTimer}
-      onBlur={clearTimer}
+      onMouseEnter={startReadTimer}
+      onMouseLeave={clearReadTimer}
+      onFocus={startReadTimer}
+      onBlur={clearReadTimer}
       tabIndex={0}
       className={cn(
         "group flex gap-4 w-full transition-all duration-300 outline-none rounded-xl p-2 -mx-2 hover:bg-card/30 focus-visible:bg-card/30",
@@ -228,64 +347,113 @@ function NewsItemCard({
         </p>
 
         {/* Social Action Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
-          {/* Vector reactions with hover wiggle & scale animations */}
-          <div className="flex items-center gap-2 select-none">
-            {(['like', 'fire', 'rocket'] as const).map((type) => {
-              const count = reactionData ? reactionData[type] : 0;
-              const hasReacted = reactionData ? !!reactionData.userReacted[type] : false;
-              
-              let iconName = 'fluent:thumb-like-16-regular';
-              let activeIconName = 'fluent:thumb-like-16-filled';
-              let label = 'Like';
-              let activeClass = 'text-blue-500 bg-blue-500/10 border-blue-500/30';
-              let hoverClass = 'hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/20';
-              
-              if (type === 'fire') {
-                iconName = 'fluent:local-fire-16-regular';
-                activeIconName = 'fluent:local-fire-16-filled';
-                label = 'Fire';
-                activeClass = 'text-orange-500 bg-orange-500/10 border-orange-500/30';
-                hoverClass = 'hover:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/20';
-              } else if (type === 'rocket') {
-                iconName = 'fluent:rocket-16-regular';
-                activeIconName = 'fluent:rocket-16-filled';
-                label = 'Rocket';
-                activeClass = 'text-indigo-500 bg-indigo-500/10 border-indigo-500/30';
-                hoverClass = 'hover:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/20';
-              }
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3 relative">
+          {/* Facebook-style Action Trigger and Counts */}
+          <div className="flex items-center gap-3 select-none">
+            {/* Reaction Trigger Button Container */}
+            <div 
+              className="relative"
+              onMouseEnter={handleTriggerMouseEnter}
+              onMouseLeave={handleTriggerMouseLeave}
+            >
+              {/* Main Button */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={handleDirectClick}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-all duration-200 min-h-[30px] outline-none focus-visible:ring-1 focus-visible:ring-primary",
+                  getTriggerStyles()
+                )}
+                aria-label="React to post"
+              >
+                <Icon icon={getTriggerIcon()} width={15} />
+                <span>{getTriggerText()}</span>
+              </motion.button>
 
-              return (
-                <motion.button
-                  key={type}
-                  whileTap={{ scale: 0.9 }}
-                  whileHover={{ 
-                    scale: 1.08,
-                    rotate: [0, -6, 6, -6, 0],
-                  }}
-                  transition={{ type: "spring", stiffness: 450, damping: 12 }}
-                  onClick={() => onReact(type)}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-all duration-200 min-h-[28px] outline-none focus-visible:ring-1 focus-visible:ring-primary",
-                    hasReacted 
-                      ? activeClass 
-                      : "bg-muted/40 text-muted-foreground border-border/40 " + hoverClass
-                  )}
-                  aria-label={`React with ${label}`}
-                >
+              {/* Hover Floating Reaction Tray Popover */}
+              <AnimatePresence>
+                {showTray && (
                   <motion.div
-                    key={hasReacted ? `${type}-active` : `${type}-inactive`}
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 12 }}
-                    className="inline-flex items-center justify-center"
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={{
+                      hidden: { opacity: 0, scale: 0.7, y: 12 },
+                      visible: {
+                        opacity: 1,
+                        scale: 1,
+                        y: 0,
+                        transition: {
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 18,
+                          staggerChildren: 0.04 // staggered children animations
+                        }
+                      }
+                    }}
+                    onMouseEnter={handleTrayMouseEnter}
+                    onMouseLeave={handleTrayMouseLeave}
+                    className="absolute bottom-full left-0 mb-2.5 bg-card/95 backdrop-blur-md border border-border/80 rounded-full py-1.5 px-3 shadow-2xl flex gap-3 items-center z-40"
+                    style={{ transformOrigin: 'bottom left' }}
                   >
-                    <Icon icon={hasReacted ? activeIconName : iconName} width={16} />
+                    {([
+                      { type: 'like', iconName: 'fluent:thumb-like-16-regular', activeIconName: 'fluent:thumb-like-16-filled', label: 'Like', hoverColor: 'hover:text-blue-400 hover:scale-120' },
+                      { type: 'fire', iconName: 'fluent:local-fire-16-regular', activeIconName: 'fluent:local-fire-16-filled', label: 'Fire', hoverColor: 'hover:text-orange-400 hover:scale-120' },
+                      { type: 'rocket', iconName: 'fluent:rocket-16-regular', activeIconName: 'fluent:rocket-16-filled', label: 'Rocket', hoverColor: 'hover:text-indigo-400 hover:scale-120' }
+                    ] as const).map((item) => {
+                      const hasReacted = reactionData ? !!reactionData.userReacted[item.type] : false;
+                      return (
+                        <motion.button
+                          key={item.type}
+                          variants={{
+                            hidden: { scale: 0, y: 10 },
+                            visible: { 
+                              scale: 1, 
+                              y: 0, 
+                              transition: { type: "spring", stiffness: 400, damping: 14 } 
+                            }
+                          }}
+                          whileHover={{ 
+                            scale: 1.25, 
+                            rotate: [0, -8, 8, -8, 0],
+                            transition: { duration: 0.3 }
+                          }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => selectReaction(item.type)}
+                          className={cn(
+                            "w-8 h-8 rounded-full border border-border/20 flex items-center justify-center bg-card cursor-pointer transition-colors duration-150 outline-none focus-visible:ring-1 focus-visible:ring-primary",
+                            hasReacted 
+                              ? (item.type === 'like' ? 'text-blue-500' : (item.type === 'fire' ? 'text-orange-500' : 'text-indigo-500'))
+                              : "text-muted-foreground " + item.hoverColor
+                          )}
+                          aria-label={item.label}
+                        >
+                          <Icon icon={hasReacted ? item.activeIconName : item.iconName} width={18} />
+                        </motion.button>
+                      );
+                    })}
                   </motion.div>
-                  <span className="font-mono text-[11px]">{count}</span>
-                </motion.button>
-              );
-            })}
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Reaction counts summary grouped nicely next to action trigger */}
+            {reactionsSummary.length > 0 && (
+              <div className="flex items-center gap-1 select-none">
+                {reactionsSummary.map((r) => {
+                  let icon = 'fluent:thumb-like-16-filled';
+                  let color = 'text-blue-500';
+                  if (r.type === 'fire') { icon = 'fluent:local-fire-16-filled'; color = 'text-orange-500'; }
+                  if (r.type === 'rocket') { icon = 'fluent:rocket-16-filled'; color = 'text-indigo-500'; }
+                  return (
+                    <span key={r.type} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/20 px-2 py-0.5 rounded-full border border-border/5">
+                      <Icon icon={icon} className={color} width={12} />
+                      <span className="font-mono text-[10px]">{r.count}</span>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Social / Info buttons */}

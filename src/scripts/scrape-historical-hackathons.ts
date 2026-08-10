@@ -355,9 +355,9 @@ function loadEnv() {
   }
 }
 
-// Date range filters (expanded to January 2020 to August 2026)
+// Date range filters (expanded to January 2020 to December 2035)
 const START_DATE = new Date('2020-01-01T00:00:00Z');
-const END_DATE = new Date('2026-08-31T23:59:59Z');
+const END_DATE = new Date('2035-12-31T23:59:59Z');
 
 function isWithinPeriod(dateObj: Date): boolean {
   return dateObj >= START_DATE && dateObj <= END_DATE;
