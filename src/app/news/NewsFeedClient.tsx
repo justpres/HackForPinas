@@ -6,7 +6,6 @@ import { Icon } from '@iconify/react';
 import { formatDistanceToNow } from 'date-fns';
 import { NewsItem } from '@/lib/news';
 import { cn } from '@/lib/utils';
-import { GenerativePattern } from '@/components/GenerativePattern';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 
 interface Props {
@@ -17,6 +16,7 @@ export default function NewsFeedClient({ articles }: Props) {
   const shouldReduceMotion = useReducedMotion();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<'all' | 'government' | 'media'>('all');
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const filteredArticles = articles.filter((item) => {
     // Search filter
@@ -34,29 +34,43 @@ export default function NewsFeedClient({ articles }: Props) {
     return true;
   });
 
-  const getSourceColorClass = (source: string) => {
+  const handleCopy = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    setTimeout(() => setCopiedUrl(null), 2000);
+  };
+
+  const getSourceIcon = (source: string) => {
     switch (source.toUpperCase()) {
-      case 'DICT':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
       case 'DOST ASTI':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'DOST NATIONAL':
+        return 'fluent:shield-keyhole-16-regular';
       case 'INQUIRER TECH':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+        return 'fluent:megaphone-16-regular';
       default:
-        return 'bg-muted text-muted-foreground border-border/20';
+        return 'fluent:news-16-regular';
     }
   };
 
-  const getCardGlowClass = (source: string) => {
+  const getSourceBadgeColor = (source: string) => {
     switch (source.toUpperCase()) {
-      case 'DICT':
-        return 'group-hover:shadow-[0_0_15px_-3px_rgba(16,185,129,0.15)] group-hover:border-emerald-500/30';
       case 'DOST ASTI':
-        return 'group-hover:shadow-[0_0_15px_-3px_rgba(59,130,246,0.15)] group-hover:border-blue-500/30';
+        return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
       case 'INQUIRER TECH':
-        return 'group-hover:shadow-[0_0_15px_-3px_rgba(245,158,11,0.15)] group-hover:border-amber-500/30';
+        return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
       default:
-        return 'group-hover:shadow-[0_0_15px_-3px_rgba(255,255,255,0.05)]';
+        return 'text-primary bg-primary/10 border-primary/20';
+    }
+  };
+
+  const getSpineGlowColor = (source: string) => {
+    switch (source.toUpperCase()) {
+      case 'DOST ASTI':
+        return 'bg-blue-500/40';
+      case 'INQUIRER TECH':
+        return 'bg-amber-500/40';
+      default:
+        return 'bg-primary/40';
     }
   };
 
@@ -71,10 +85,10 @@ export default function NewsFeedClient({ articles }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
       {/* ── Filter Bar ────────────────────────────────────────── */}
       <div className="sticky top-16 z-30 border-b bg-background/95 py-4 backdrop-blur-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Search Input */}
           <div className="relative flex-1 max-w-sm">
             <Icon
@@ -114,105 +128,133 @@ export default function NewsFeedClient({ articles }: Props) {
         </div>
 
         {/* Article Count */}
-        <div className="mt-4 text-sm text-muted-foreground flex items-center gap-1.5">
-          <Icon icon="fluent:document-bullet-list-16-regular" width={16} />
-          {filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''} found
+        <div className="mt-4 text-xs text-muted-foreground flex items-center gap-1.5">
+          <Icon icon="fluent:document-bullet-list-16-regular" width={14} />
+          {filteredArticles.length} updates found in the stream
         </div>
       </div>
 
-      {/* ── News Cards Grid ───────────────────────────────────── */}
+      {/* ── Threads/Social Style News Stream ───────────────────── */}
       {filteredArticles.length > 0 ? (
         <motion.div
           variants={container}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="flex flex-col"
         >
           {filteredArticles.map((article, idx) => {
             const isGov = article.sourceCategory === 'government';
             const formattedDate = formatDistanceToNow(new Date(article.pubDate), { addSuffix: true });
+            
+            // Calculate reading time based on 200 WPM
+            const words = (article.title + ' ' + article.description).split(/\s+/).length;
+            const readingTime = Math.max(1, Math.ceil(words / 200));
+
+            const isCopied = copiedUrl === article.link;
 
             return (
-              <motion.article
+              <motion.div
                 key={`${article.link}-${idx}`}
                 variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } }}
                 transition={{ duration: 0.25 }}
-                whileHover={shouldReduceMotion ? {} : { y: -3 }}
-                className={cn(
-                  'group flex flex-col overflow-hidden rounded-lg border bg-card/40 transition-all duration-300',
-                  getCardGlowClass(article.sourceName)
-                )}
-                style={{ boxShadow: 'var(--shadow-resting)' }}
+                className="group flex gap-4 w-full"
               >
-                {/* Header Image Area */}
-                <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                  {article.imageUrl ? (
-                    <img
-                      src={article.imageUrl}
-                      alt=""
-                      aria-hidden="true"
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-103"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <GenerativePattern
-                      seed={article.title}
-                      organizerType={isGov ? 'government' : 'private'}
-                      className="h-full w-full transition-transform duration-300 group-hover:scale-103"
-                    />
-                  )}
-
-                  {/* Glassmorphic Date Overlay */}
-                  <div className="absolute right-2 top-2 rounded-md bg-background/80 px-2.5 py-1 text-[10px] font-semibold text-muted-foreground backdrop-blur-sm border border-white/5">
-                    {formattedDate}
+                {/* Left Side: Avatar & Timeline Spine */}
+                <div className="flex flex-col items-center shrink-0">
+                  {/* Circle Avatar badge */}
+                  <div className={cn(
+                    'w-10 h-10 rounded-full border flex items-center justify-center bg-card transition-all duration-300 group-hover:scale-105',
+                    isGov ? 'border-blue-500/20 text-blue-400' : 'border-amber-500/20 text-amber-400'
+                  )}>
+                    <Icon icon={getSourceIcon(article.sourceName)} width={20} />
                   </div>
+                  
+                  {/* Spine Connector track */}
+                  {idx !== filteredArticles.length - 1 && (
+                    <div className="w-0.5 bg-border/30 flex-1 my-2 transition-colors duration-300 group-hover:bg-border/60 relative">
+                      {/* Subtly glowing neon hover spine overlay */}
+                      <div className={cn(
+                        'absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded',
+                        getSpineGlowColor(article.sourceName)
+                      )} />
+                    </div>
+                  )}
                 </div>
 
-                {/* Content Area */}
-                <div className="flex flex-1 flex-col justify-between p-4 gap-4">
-                  <div className="flex flex-col gap-2">
-                    {/* Source Badges */}
-                    <div className="flex items-center gap-2">
-                      <span className={cn(
-                        'inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                        getSourceColorClass(article.sourceName)
-                      )}>
-                        {article.sourceName}
-                      </span>
-                      {isGov && <VerifiedBadge />}
-                    </div>
-
-                    {/* Headline */}
-                    <h3 className="line-clamp-2 text-base font-bold leading-snug group-hover:text-primary transition-colors">
-                      {article.title}
-                    </h3>
-
-                    {/* Description Snippet */}
-                    <p className="line-clamp-3 text-sm text-muted-foreground leading-relaxed">
-                      {article.description}
-                    </p>
+                {/* Right Side: Post Contents */}
+                <div className="flex-1 pb-10 flex flex-col gap-2">
+                  {/* Metadata Header */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className={cn(
+                      'font-bold px-1.5 py-0.5 rounded border text-[9px] uppercase tracking-wider',
+                      getSourceBadgeColor(article.sourceName)
+                    )}>
+                      {article.sourceName}
+                    </span>
+                    {isGov && <VerifiedBadge />}
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground font-medium" title={new Date(article.pubDate).toLocaleString()}>
+                      {formattedDate}
+                    </span>
                   </div>
 
-                  {/* Outbound Link Button (WCAG Compliance) */}
+                  {/* Headline */}
                   <a
                     href={article.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-border bg-card/85 px-4 py-2 text-xs font-semibold text-foreground transition-all duration-200 hover:bg-primary hover:text-primary-foreground hover:border-primary min-h-[44px] cursor-pointer mt-auto"
+                    className="text-base md:text-lg font-bold leading-snug text-foreground/95 hover:text-primary transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                   >
-                    Read Full Article
-                    <Icon icon="fluent:open-16-regular" width={14} />
+                    {article.title}
                   </a>
+
+                  {/* Description text */}
+                  <p className="text-sm text-foreground/80 leading-relaxed max-w-xl">
+                    {article.description}
+                  </p>
+
+                  {/* Social Action Footer */}
+                  <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-muted-foreground">
+                    {/* Read More button */}
+                    <a
+                      href={article.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 hover:text-primary transition-colors py-1 min-h-[32px] font-medium"
+                    >
+                      <Icon icon="fluent:open-16-regular" width={14} />
+                      Read post
+                    </a>
+
+                    {/* Copy / Share button */}
+                    <button
+                      onClick={() => handleCopy(article.link)}
+                      className={cn(
+                        'inline-flex items-center gap-1 transition-colors py-1 min-h-[32px] cursor-pointer font-medium',
+                        isCopied ? 'text-emerald-400' : 'hover:text-primary'
+                      )}
+                      aria-label="Share post"
+                    >
+                      <Icon icon={isCopied ? 'fluent:checkmark-16-filled' : 'fluent:share-android-16-regular'} width={14} />
+                      {isCopied ? 'Copied' : 'Share'}
+                    </button>
+
+                    {/* Reading Time Badge */}
+                    <div className="inline-flex items-center gap-1 text-[11px] font-medium bg-muted px-2 py-0.5 rounded border border-border/20">
+                      <Icon icon="fluent:clock-16-regular" width={12} />
+                      {readingTime} min read
+                    </div>
+                  </div>
                 </div>
-              </motion.article>
+              </motion.div>
             );
           })}
         </motion.div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Icon icon="fluent:search-dismiss-24-regular" className="text-muted-foreground w-12 h-12 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No articles match your search</h2>
-          <p className="text-muted-foreground">Adjust your filters or type a different keyword.</p>
+          <h2 className="text-xl font-semibold mb-2">No updates found</h2>
+          <p className="text-muted-foreground">Adjust your filters or query a different keyword.</p>
         </div>
       )}
     </div>
