@@ -15,6 +15,7 @@ export function Header() {
 
   const navLinks = [
     { href: '/', label: 'Events' },
+    { href: '/news', label: 'News' },
     { href: '/submit', label: 'Submit' },
   ];
 

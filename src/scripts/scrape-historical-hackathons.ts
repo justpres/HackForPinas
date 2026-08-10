@@ -18,7 +18,7 @@ interface HackathonInsert {
   poster_image_url?: string;
 }
 
-// Curated prestigious hackathons from August 2024 to August 2026
+// Curated prestigious hackathons from January 2020 to August 2026
 const CURATED_HISTORICAL_HACKATHONS: HackathonInsert[] = [
   {
     title: 'DICT eGovPH Hackathon 2026',
@@ -60,6 +60,32 @@ const CURATED_HISTORICAL_HACKATHONS: HackathonInsert[] = [
     format: 'in-person',
   },
   {
+    title: 'DICT Hack4Gov 2023',
+    description: 'A cybersecurity and digital defense coding simulation and attack-defense challenge held for students and practitioners across the regions.',
+    organizerName: 'DICT (Department of Information and Communications Technology)',
+    organizerType: 'government',
+    sourceUrl: 'https://dict.gov.ph',
+    redirectUrl: 'https://dict.gov.ph',
+    deadline: '2023-09-10T23:59:59Z',
+    eventStart: '2023-09-18T08:00:00Z',
+    eventEnd: '2023-09-20T17:00:00Z',
+    region: 'Nationwide',
+    format: 'in-person',
+  },
+  {
+    title: 'DICT Hack4Gov 2022',
+    description: 'A nationwide cyber-drill and security competition organized by DICT to train security developers and engineers in defensive software practices.',
+    organizerName: 'DICT (Department of Information and Communications Technology)',
+    organizerType: 'government',
+    sourceUrl: 'https://dict.gov.ph',
+    redirectUrl: 'https://dict.gov.ph',
+    deadline: '2022-10-05T23:59:59Z',
+    eventStart: '2022-10-15T08:00:00Z',
+    eventEnd: '2022-10-16T17:00:00Z',
+    region: 'Nationwide',
+    format: 'hybrid',
+  },
+  {
     title: 'DOST National AI Fest Hackathon 2025',
     description: 'A premier national AI competition held during the AI Fest at the Iloilo Convention Center, challenging developers to build AI solutions for agricultural productivity and local governance.',
     organizerName: 'DOST (Department of Science and Technology)',
@@ -99,6 +125,45 @@ const CURATED_HISTORICAL_HACKATHONS: HackathonInsert[] = [
     format: 'hybrid',
   },
   {
+    title: 'NASA Space Apps Challenge Philippines 2023',
+    description: 'Addressing planetary problems and environmental data challenges using NASA Earth observation datasets and public satellites.',
+    organizerName: 'DOST (Department of Science and Technology)',
+    organizerType: 'government',
+    sourceUrl: 'https://dost.gov.ph',
+    redirectUrl: 'https://dost.gov.ph',
+    deadline: '2023-09-28T23:59:59Z',
+    eventStart: '2023-10-07T08:00:00Z',
+    eventEnd: '2023-10-08T17:00:00Z',
+    region: 'NCR',
+    format: 'hybrid',
+  },
+  {
+    title: 'NASA Space Apps Challenge Philippines 2022',
+    description: 'Developing tools for space observation and public climate monitoring, engaging hundreds of student developers.',
+    organizerName: 'DOST (Department of Science and Technology)',
+    organizerType: 'government',
+    sourceUrl: 'https://dost.gov.ph',
+    redirectUrl: 'https://dost.gov.ph',
+    deadline: '2022-09-25T23:59:59Z',
+    eventStart: '2022-10-01T08:00:00Z',
+    eventEnd: '2022-10-02T17:00:00Z',
+    region: 'NCR',
+    format: 'online',
+  },
+  {
+    title: 'NASA Space Apps Challenge Philippines 2021',
+    description: 'Virtual space hackathon addressing environmental, maritime, and public health threats using satellite telemetry.',
+    organizerName: 'DOST (Department of Science and Technology)',
+    organizerType: 'government',
+    sourceUrl: 'https://dost.gov.ph',
+    redirectUrl: 'https://dost.gov.ph',
+    deadline: '2021-09-20T23:59:59Z',
+    eventStart: '2021-10-02T08:00:00Z',
+    eventEnd: '2021-10-03T17:00:00Z',
+    region: 'Nationwide',
+    format: 'online',
+  },
+  {
     title: 'Ateneo Blue Hacks 2024',
     description: 'The annual premier student-run hackathon organized by CompSAt, empowering participants to conceptualize, prototype, and pitch digital products targeting local societal issues.',
     organizerName: 'Ateneo Computer Society (CompSAt)',
@@ -123,6 +188,45 @@ const CURATED_HISTORICAL_HACKATHONS: HackathonInsert[] = [
     eventEnd: '2025-03-30T17:00:00Z',
     region: 'NCR',
     format: 'in-person',
+  },
+  {
+    title: 'Ateneo Blue Hacks 2023',
+    description: 'Empowering students to design web technologies supporting education equity and small business post-pandemic adaptation.',
+    organizerName: 'Ateneo Computer Society (CompSAt)',
+    organizerType: 'university',
+    sourceUrl: 'https://ateneo.edu',
+    redirectUrl: 'https://ateneo.edu',
+    deadline: '2023-03-15T23:59:59Z',
+    eventStart: '2023-03-25T08:00:00Z',
+    eventEnd: '2023-03-26T17:00:00Z',
+    region: 'NCR',
+    format: 'hybrid',
+  },
+  {
+    title: 'Ateneo Blue Hacks 2022',
+    description: 'Under the theme of digital empowerment, the 2022 hackathon focused on web resources for public healthcare and medical access.',
+    organizerName: 'Ateneo Computer Society (CompSAt)',
+    organizerType: 'university',
+    sourceUrl: 'https://ateneo.edu',
+    redirectUrl: 'https://ateneo.edu',
+    deadline: '2022-03-10T23:59:59Z',
+    eventStart: '2022-03-19T08:00:00Z',
+    eventEnd: '2022-03-20T17:00:00Z',
+    region: 'NCR',
+    format: 'online',
+  },
+  {
+    title: 'Ateneo Blue Hacks 2021',
+    description: 'A fully virtual hackathon challenge targeting sustainable development goals and digital tools for virtual learning.',
+    organizerName: 'Ateneo Computer Society (CompSAt)',
+    organizerType: 'university',
+    sourceUrl: 'https://ateneo.edu',
+    redirectUrl: 'https://ateneo.edu',
+    deadline: '2021-03-05T23:59:59Z',
+    eventStart: '2021-03-13T08:00:00Z',
+    eventEnd: '2021-03-14T17:00:00Z',
+    region: 'NCR',
+    format: 'online',
   },
   {
     title: 'DEVCON CodeCamp Hackathon 2025',
@@ -151,6 +255,19 @@ const CURATED_HISTORICAL_HACKATHONS: HackathonInsert[] = [
     format: 'in-person',
   },
   {
+    title: 'DEVCON Summit 2023 Hackathon',
+    description: 'The flagship developer summit hackathon, focusing on building high-performance decentralized systems, Web3 utilities, and scalable enterprise APIs.',
+    organizerName: 'DEVCON Philippines',
+    organizerType: 'private',
+    sourceUrl: 'https://devcon.ph',
+    redirectUrl: 'https://devcon.ph',
+    deadline: '2023-11-10T23:59:59Z',
+    eventStart: '2023-11-18T08:00:00Z',
+    eventEnd: '2023-11-19T17:00:00Z',
+    region: 'Nationwide',
+    format: 'in-person',
+  },
+  {
     title: 'FEU Tech Create & Conquer 2025',
     description: 'Organized by the FEU Tech computer department, this competition tasks undergraduate engineers with designing web and mobile solutions for smart cities and education.',
     organizerName: 'FEU Institute of Technology',
@@ -162,6 +279,58 @@ const CURATED_HISTORICAL_HACKATHONS: HackathonInsert[] = [
     eventEnd: '2025-06-22T17:00:00Z',
     region: 'NCR',
     format: 'hybrid',
+  },
+  {
+    title: 'FEU Tech Create & Conquer 2024',
+    description: 'High school and college coding competition for crafting cloud-based solutions and automation algorithms using open platforms.',
+    organizerName: 'FEU Institute of Technology',
+    organizerType: 'university',
+    sourceUrl: 'https://feutech.edu.ph',
+    redirectUrl: 'https://feutech.edu.ph',
+    deadline: '2024-06-10T23:59:59Z',
+    eventStart: '2024-06-18T08:00:00Z',
+    eventEnd: '2024-06-20T17:00:00Z',
+    region: 'NCR',
+    format: 'hybrid',
+  },
+  {
+    title: 'FEU Tech Create & Conquer 2023',
+    description: 'A technology challenge focused on desktop programming, robotics interfacing, and algorithmic efficiency for student builders.',
+    organizerName: 'FEU Institute of Technology',
+    organizerType: 'university',
+    sourceUrl: 'https://feutech.edu.ph',
+    redirectUrl: 'https://feutech.edu.ph',
+    deadline: '2023-06-05T23:59:59Z',
+    eventStart: '2023-06-12T08:00:00Z',
+    eventEnd: '2023-06-14T17:00:00Z',
+    region: 'NCR',
+    format: 'in-person',
+  },
+  {
+    title: 'Impact Hackathon 2021',
+    description: 'Part of the Impact 2021 initiative, focusing on smart agriculture, environmental tech, and healthcare access digital platforms across the Philippines.',
+    organizerName: 'Impact Hub Manila',
+    organizerType: 'private',
+    sourceUrl: 'https://impacthub.ph',
+    redirectUrl: 'https://impacthub.ph',
+    deadline: '2021-11-20T23:59:59Z',
+    eventStart: '2021-11-26T08:00:00Z',
+    eventEnd: '2021-11-28T17:00:00Z',
+    region: 'Nationwide',
+    format: 'online',
+  },
+  {
+    title: 'Impact Hackathon 2020',
+    description: 'The massive national record-breaking hackathon focusing on agriculture, climate change, education, health, and financial inclusion.',
+    organizerName: 'Impact Hub Manila',
+    organizerType: 'private',
+    sourceUrl: 'https://impacthub.ph',
+    redirectUrl: 'https://impacthub.ph',
+    deadline: '2020-10-15T23:59:59Z',
+    eventStart: '2020-10-23T08:00:00Z',
+    eventEnd: '2020-10-25T17:00:00Z',
+    region: 'Nationwide',
+    format: 'online',
   }
 ];
 
@@ -186,8 +355,8 @@ function loadEnv() {
   }
 }
 
-// Date range filters
-const START_DATE = new Date('2024-08-01T00:00:00Z');
+// Date range filters (expanded to January 2020 to August 2026)
+const START_DATE = new Date('2020-01-01T00:00:00Z');
 const END_DATE = new Date('2026-08-31T23:59:59Z');
 
 function isWithinPeriod(dateObj: Date): boolean {
@@ -288,6 +457,8 @@ function detectOrganizerType(name: string): 'government' | 'university' | 'priva
   return 'private';
 }
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Scrape Devpost API for ended, open, and upcoming events targeted at Philippines
 async function scrapeDevpost(): Promise<HackathonInsert[]> {
   console.log('\n--- Scraping Devpost JSON API ---');
@@ -295,10 +466,12 @@ async function scrapeDevpost(): Promise<HackathonInsert[]> {
   const events: HackathonInsert[] = [];
 
   for (const status of statuses) {
-    // Iterate through pages 1 to 5 to pull enough historical records
-    for (let page = 1; page <= 5; page++) {
+    // Iterate through pages 1 to 40 to grab all historical records back to 2020
+    for (let page = 1; page <= 40; page++) {
       const url = `https://devpost.com/api/hackathons?keywords=Philippines&status[]=${status}&page=${page}`;
       try {
+        await delay(300); // 300ms throttle to prevent rate blocking
+        
         const res = await fetch(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -315,8 +488,11 @@ async function scrapeDevpost(): Promise<HackathonInsert[]> {
         const data = await res.json();
         const hackathons = data.hackathons;
         if (!Array.isArray(hackathons) || hackathons.length === 0) {
-          break; // No more hackathons for this status
+          console.log(`  No more results for status "${status}" at page ${page}`);
+          break; 
         }
+
+        console.log(`  Fetched page ${page} for status "${status}" - Found ${hackathons.length} raw events`);
 
         for (const item of hackathons) {
           const title = item.title;
@@ -334,7 +510,7 @@ async function scrapeDevpost(): Promise<HackathonInsert[]> {
             continue;
           }
 
-          // Check if dates are within the past 2 years (Aug 2024 - Aug 2026)
+          // Check if dates are within the past window (Jan 2020 - Aug 2026)
           if (!isWithinPeriod(parsedDates.start) && !isWithinPeriod(parsedDates.end)) {
             continue;
           }
@@ -379,7 +555,7 @@ async function scrapeDevpost(): Promise<HackathonInsert[]> {
     }
   }
 
-  console.log(`Devpost API: Collected ${events.length} valid events in the past 2-year window.`);
+  console.log(`Devpost API: Collected ${events.length} valid events matching filters.`);
   return events;
 }
 
@@ -540,7 +716,7 @@ async function main() {
           hackathon_id: newHack.id,
           action: 'submitted',
           actor: 'community',
-          notes: `Seeded via historical hackathon scraper run.`
+          notes: `Seeded via historical hackathon scraper run (expanded back to 2020).`
         });
 
         console.log(`  -> Success! Seeded hackathon ID: ${newHack.id}`);
