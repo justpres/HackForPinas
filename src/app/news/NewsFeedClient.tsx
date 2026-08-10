@@ -10,6 +10,7 @@ import { VerifiedBadge } from '@/components/VerifiedBadge';
 
 interface Props {
   articles: NewsItem[];
+  initialLink?: string;
 }
 
 // Seed initial reaction counts based on the article's link string
@@ -104,6 +105,7 @@ interface NewsItemCardProps {
   isCopied: boolean;
   reactionData: { like: number; fire: number; rocket: number; userReacted: Record<string, boolean> } | undefined;
   onReact: (type: 'like' | 'fire' | 'rocket') => void;
+  isHighlighted: boolean;
 }
 
 function NewsItemCard({
@@ -116,12 +118,30 @@ function NewsItemCard({
   isCopied,
   reactionData,
   onReact,
+  isHighlighted
 }: NewsItemCardProps) {
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const trayEnterTimerRef = useRef<NodeJS.Timeout | null>(null);
   const trayLeaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const shareMenuRef = useRef<HTMLDivElement | null>(null);
 
   const [showTray, setShowTray] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+
+  // Close share menu on click outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(e.target as Node)) {
+        setShowShareMenu(false);
+      }
+    };
+    if (showShareMenu) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [showShareMenu]);
 
   // Auto mark as read on hover/focus after 2s
   const startReadTimer = () => {
@@ -188,8 +208,6 @@ function NewsItemCard({
   };
 
   const handleDirectClick = () => {
-    // If user has an active reaction, clicking untoggles it
-    // If not, toggle standard 'like' reaction
     const currentActive = getActiveReaction();
     if (currentActive) {
       onReact(currentActive);
@@ -270,8 +288,18 @@ function NewsItemCard({
     .map((t) => ({ type: t, count: reactionData ? reactionData[t] : 0 }))
     .filter((r) => r.count > 0);
 
+  // Formulate social share URLs redirecting back to our news page
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hackforpinas.gg';
+  const customShareUrl = `${origin}/news?link=${encodeURIComponent(article.link)}`;
+  
+  const facebookShare = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(customShareUrl)}`;
+  const whatsappShare = `https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this Philippine tech update: "${article.title}"\n\n${customShareUrl}`)}`;
+  const linkedinShare = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(customShareUrl)}`;
+  const devToShare = `https://dev.to/new?prefill=${encodeURIComponent(`--- \ntitle: "${article.title}" \npublished: false \ntags: hackathon, tech, philippines \ncanonical_url: "${article.link}" \n--- \n\nOriginally posted on HackForPinas: [Read Article](${customShareUrl})\n\n${article.description}`)}`;
+
   return (
     <motion.div
+      id={`news-card-${encodeURIComponent(article.link)}`}
       variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } }}
       transition={{ duration: 0.25 }}
       onMouseEnter={startReadTimer}
@@ -280,8 +308,11 @@ function NewsItemCard({
       onBlur={clearReadTimer}
       tabIndex={0}
       className={cn(
-        "group flex gap-4 w-full transition-all duration-300 outline-none rounded-xl p-2 -mx-2 hover:bg-card/30 focus-visible:bg-card/30",
-        isRead ? "opacity-60" : "opacity-100"
+        "group flex gap-4 w-full transition-all duration-300 outline-none rounded-xl p-2 -mx-2 hover:bg-card/30 focus-visible:bg-card/30 border",
+        isRead ? "opacity-60" : "opacity-100",
+        isHighlighted
+          ? "border-primary/50 bg-primary/5 shadow-[0_0_20px_rgba(235,94,85,0.15)] ring-1 ring-primary/30"
+          : "border-transparent"
       )}
     >
       {/* Left Side: Avatar & Timeline Spine */}
@@ -328,6 +359,11 @@ function NewsItemCard({
           <span className="text-muted-foreground font-medium" title={new Date(article.pubDate).toLocaleString()}>
             {formattedDate}
           </span>
+          {isHighlighted && (
+            <span className="text-[9px] text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.2 rounded font-bold uppercase animate-pulse">
+              Shared Article
+            </span>
+          )}
         </div>
 
         {/* Headline */}
@@ -387,7 +423,7 @@ function NewsItemCard({
                           type: "spring",
                           stiffness: 400,
                           damping: 18,
-                          staggerChildren: 0.04 // staggered children animations
+                          staggerChildren: 0.04
                         }
                       }
                     }}
@@ -470,21 +506,106 @@ function NewsItemCard({
               Read post
             </a>
 
-            {/* Copy / Share button */}
-            <button
-              onClick={() => {
-                onShare(article.title, article.link);
-                onMarkAsRead();
-              }}
-              className={cn(
-                'inline-flex items-center gap-1 transition-colors py-1 min-h-[32px] cursor-pointer font-medium border-0 bg-transparent',
-                isCopied ? 'text-emerald-400' : 'hover:text-primary'
-              )}
-              aria-label="Share post"
-            >
-              <Icon icon={isCopied ? 'fluent:checkmark-16-filled' : 'fluent:share-android-16-regular'} width={14} />
-              {isCopied ? 'Copied' : 'Share'}
-            </button>
+            {/* Floating Share Menu Popover trigger */}
+            <div className="relative" ref={shareMenuRef}>
+              <button
+                onClick={() => setShowShareMenu(!showShareMenu)}
+                className={cn(
+                  'inline-flex items-center gap-1 transition-colors py-1 min-h-[32px] cursor-pointer font-medium border-0 bg-transparent outline-none focus-visible:ring-1 focus-visible:ring-primary',
+                  isCopied ? 'text-emerald-400' : 'hover:text-primary'
+                )}
+                aria-label="Toggle share options"
+              >
+                <Icon icon={isCopied ? 'fluent:checkmark-16-filled' : 'fluent:share-android-16-regular'} width={14} />
+                {isCopied ? 'Copied' : 'Share'}
+              </button>
+
+              {/* Share Popover Accordion List */}
+              <AnimatePresence>
+                {showShareMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                    transition={{ type: "spring", stiffness: 450, damping: 20 }}
+                    className="absolute bottom-full right-0 mb-2.5 bg-card/95 border border-border/80 rounded-xl py-2 px-1 shadow-2xl z-50 flex flex-col gap-1 w-44 backdrop-blur-md"
+                    style={{ transformOrigin: 'bottom right' }}
+                  >
+                    {/* Copy Link Option */}
+                    <button
+                      onClick={() => {
+                        onShare(article.title, article.link);
+                        setShowShareMenu(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md w-full text-left transition-colors cursor-pointer"
+                    >
+                      <Icon icon={isCopied ? "fluent:checkmark-16-filled" : "fluent:copy-16-regular"} className={cn("w-4 h-4", isCopied && "text-emerald-400")} />
+                      {isCopied ? "Copied Redirect!" : "Copy Share Link"}
+                    </button>
+
+                    {/* Divider line */}
+                    <div className="h-px bg-border/40 mx-2 my-0.5" />
+
+                    {/* Social links */}
+                    <a
+                      href={facebookShare}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        setShowShareMenu(false);
+                        onMarkAsRead();
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md w-full text-left transition-colors"
+                    >
+                      <Icon icon="logos:facebook" className="w-4 h-4" />
+                      Facebook
+                    </a>
+
+                    <a
+                      href={whatsappShare}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        setShowShareMenu(false);
+                        onMarkAsRead();
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md w-full text-left transition-colors"
+                    >
+                      <Icon icon="logos:whatsapp-icon" className="w-4 h-4" />
+                      WhatsApp
+                    </a>
+
+                    <a
+                      href={linkedinShare}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        setShowShareMenu(false);
+                        onMarkAsRead();
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md w-full text-left transition-colors"
+                    >
+                      <Icon icon="logos:linkedin-icon" className="w-4 h-4" />
+                      LinkedIn
+                    </a>
+
+                    <a
+                      href={devToShare}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        setShowShareMenu(false);
+                        onMarkAsRead();
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md w-full text-left transition-colors"
+                    >
+                      <Icon icon="logos:devto" className="w-4 h-4 bg-white rounded-sm" />
+                      Dev.to Post
+                    </a>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Reading Time Badge */}
             <div className="inline-flex items-center gap-1 text-[11px] font-medium bg-muted px-2 py-0.5 rounded border border-border/20">
@@ -498,11 +619,14 @@ function NewsItemCard({
   );
 }
 
-export default function NewsFeedClient({ articles }: Props) {
+export default function NewsFeedClient({ articles, initialLink }: Props) {
   const shouldReduceMotion = useReducedMotion();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<'all' | 'government' | 'media' | 'unread'>('all');
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  // Highlight URL Matching state
+  const [highlightedLink, setHighlightedLink] = useState<string | null>(initialLink || null);
 
   // Infinite Scroll States
   const [visibleCount, setVisibleCount] = useState(8);
@@ -550,6 +674,34 @@ export default function NewsFeedClient({ articles }: Props) {
     });
     setReactions(initial);
   }, [articles]);
+
+  // Handle URL deep-linking matching highlight & auto-scroll
+  useEffect(() => {
+    if (!initialLink || articles.length === 0) return;
+
+    // Reset categories so that the linked article isn't hidden
+    setCategory('all');
+
+    // Perform smooth scrolling to the matching target card
+    const timer = setTimeout(() => {
+      const targetCard = document.getElementById(`news-card-${encodeURIComponent(initialLink)}`);
+      if (targetCard) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Automatically trigger unread-to-read transition
+        markAsRead(initialLink);
+      }
+    }, 600);
+
+    // Dissipate neon highlight glow after 4 seconds
+    const glowTimer = setTimeout(() => {
+      setHighlightedLink(null);
+    }, 4500);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(glowTimer);
+    };
+  }, [initialLink, articles]);
 
   const filteredArticles = articles.filter((item) => {
     // Search filter
@@ -616,21 +768,24 @@ export default function NewsFeedClient({ articles }: Props) {
   };
 
   const handleShare = async (title: string, url: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://hackforpinas.gg';
+    const redirectUrl = `${origin}/news?link=${encodeURIComponent(url)}`;
+
     if (navigator.share) {
       try {
         await navigator.share({
           title: title,
           text: `Check out this tech update: "${title}"`,
-          url: url,
+          url: redirectUrl,
         });
         setCopiedUrl(url);
         setTimeout(() => setCopiedUrl(null), 2000);
       } catch (err) {
-        console.warn('Native share failed or canceled, copying to clipboard:', err);
-        handleCopy(url);
+        console.warn('Native share failed or canceled, copying redirect link to clipboard:', err);
+        handleCopy(redirectUrl);
       }
     } else {
-      handleCopy(url);
+      handleCopy(redirectUrl);
     }
   };
 
@@ -785,6 +940,7 @@ export default function NewsFeedClient({ articles }: Props) {
                   isCopied={copiedUrl === article.link}
                   reactionData={reactions[article.link]}
                   onReact={(type) => handleReact(article.link, type)}
+                  isHighlighted={highlightedLink === article.link}
                 />
               );
             })}

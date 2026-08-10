@@ -6,25 +6,68 @@ import NewsFeedClient from './NewsFeedClient';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Philippine Tech & Hackathon News Feed | HackForPinas 🇵🇭',
-  description: 'Stay updated with the latest announcements, startup news, and hackathon insights from DICT, DOST, and leading technology media portals in the Philippines.',
-  openGraph: {
-    title: 'Philippine Tech & Hackathon News Feed | HackForPinas',
-    description: 'Stay updated with the latest announcements, startup news, and hackathon insights from DICT, DOST, and leading technology media portals in the Philippines.',
-    url: 'https://hackforpinas.gg/news',
-    type: 'website',
-    locale: 'en_PH',
-    siteName: 'HackForPinas',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Philippine Tech & Hackathon News Feed | HackForPinas',
-    description: 'Stay updated with the latest announcements, startup news, and hackathon insights from DICT, DOST, and leading technology media portals in the Philippines.',
-  }
-};
+interface PageProps {
+  searchParams: Promise<{ link?: string }>;
+}
 
-export default async function NewsPage() {
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams;
+  const linkParam = resolvedSearchParams.link;
+
+  if (linkParam) {
+    try {
+      const articles = await fetchTechNews();
+      const match = articles.find((a) => a.link === linkParam);
+      if (match) {
+        return {
+          title: `${match.title} | HackForPinas Tech Stream 🇵🇭`,
+          description: match.description,
+          openGraph: {
+            title: match.title,
+            description: match.description,
+            images: match.imageUrl ? [{ url: match.imageUrl }] : undefined,
+            url: `https://hackforpinas.gg/news?link=${encodeURIComponent(linkParam)}`,
+            type: 'article',
+            locale: 'en_PH',
+            siteName: 'HackForPinas',
+          },
+          twitter: {
+            card: 'summary_large_image',
+            title: match.title,
+            description: match.description,
+            images: match.imageUrl ? [match.imageUrl] : undefined,
+          }
+        };
+      }
+    } catch (e) {
+      console.error('Error generating dynamic OG metadata:', e);
+    }
+  }
+
+  // Fallback default metadata
+  return {
+    title: 'Philippine Tech & Hackathon News Feed | HackForPinas 🇵🇭',
+    description: 'Stay updated with the latest announcements, startup news, and hackathon insights from DICT, DOST, and leading technology media portals in the Philippines.',
+    openGraph: {
+      title: 'Philippine Tech & Hackathon News Feed | HackForPinas',
+      description: 'Stay updated with the latest announcements, startup news, and hackathon insights from DICT, DOST, and leading technology media portals in the Philippines.',
+      url: 'https://hackforpinas.gg/news',
+      type: 'website',
+      locale: 'en_PH',
+      siteName: 'HackForPinas',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'Philippine Tech & Hackathon News Feed | HackForPinas',
+      description: 'Stay updated with the latest announcements, startup news, and hackathon insights from DICT, DOST, and leading technology media portals in the Philippines.',
+    }
+  };
+}
+
+export default async function NewsPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams;
+  const linkParam = resolvedSearchParams.link;
+
   let articles: NewsItem[] = [];
   try {
     articles = await fetchTechNews();
@@ -46,7 +89,7 @@ export default async function NewsPage() {
             </p>
           </header>
           
-          <NewsFeedClient articles={articles} />
+          <NewsFeedClient articles={articles} initialLink={linkParam} />
         </div>
       </main>
       <Footer />
