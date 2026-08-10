@@ -359,6 +359,11 @@ function NewsItemCard({
           <span className="text-muted-foreground font-medium" title={new Date(article.pubDate).toLocaleString()}>
             {formattedDate}
           </span>
+          <span className="text-muted-foreground">•</span>
+          <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+            <Icon icon="fluent:clock-16-regular" width={12} />
+            {readingTime} min read
+          </span>
           {isHighlighted && (
             <span className="text-[9px] text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.2 rounded font-bold uppercase animate-pulse">
               Shared Article
@@ -607,11 +612,7 @@ function NewsItemCard({
               </AnimatePresence>
             </div>
 
-            {/* Reading Time Badge */}
-            <div className="inline-flex items-center gap-1 text-[11px] font-medium bg-muted px-2 py-0.5 rounded border border-border/20">
-              <Icon icon="fluent:clock-16-regular" width={12} />
-              {readingTime} min read
-            </div>
+
           </div>
         </div>
       </div>
