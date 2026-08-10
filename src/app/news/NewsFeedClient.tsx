@@ -191,6 +191,13 @@ function NewsItemCard({
       <div className="flex-1 pb-10 flex flex-col gap-2">
         {/* Metadata Header */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
+          {/* Glowing Unread Indicator Dot */}
+          {!isRead && (
+            <span className="relative flex h-2 w-2 mr-0.5" title="Unread Article">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+          )}
           <span className={cn(
             'font-bold px-1.5 py-0.5 rounded border text-[9px] uppercase tracking-wider',
             getSourceBadgeColor(article.sourceName)
@@ -202,11 +209,6 @@ function NewsItemCard({
           <span className="text-muted-foreground font-medium" title={new Date(article.pubDate).toLocaleString()}>
             {formattedDate}
           </span>
-          {isRead && (
-            <span className="text-[10px] text-emerald-500 bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.2 rounded font-semibold tracking-wide uppercase">
-              Read
-            </span>
-          )}
         </div>
 
         {/* Headline */}
@@ -227,24 +229,27 @@ function NewsItemCard({
 
         {/* Social Action Footer */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
-          {/* Micro reactions */}
+          {/* Vector reactions with hover wiggle & scale animations */}
           <div className="flex items-center gap-2 select-none">
             {(['like', 'fire', 'rocket'] as const).map((type) => {
               const count = reactionData ? reactionData[type] : 0;
               const hasReacted = reactionData ? !!reactionData.userReacted[type] : false;
               
-              let emoji = '👍';
+              let iconName = 'fluent:thumb-like-16-regular';
+              let activeIconName = 'fluent:thumb-like-16-filled';
               let label = 'Like';
               let activeClass = 'text-blue-500 bg-blue-500/10 border-blue-500/30';
               let hoverClass = 'hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/20';
               
               if (type === 'fire') {
-                emoji = '🔥';
+                iconName = 'fluent:local-fire-16-regular';
+                activeIconName = 'fluent:local-fire-16-filled';
                 label = 'Fire';
                 activeClass = 'text-orange-500 bg-orange-500/10 border-orange-500/30';
                 hoverClass = 'hover:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/20';
               } else if (type === 'rocket') {
-                emoji = '🚀';
+                iconName = 'fluent:rocket-16-regular';
+                activeIconName = 'fluent:rocket-16-filled';
                 label = 'Rocket';
                 activeClass = 'text-indigo-500 bg-indigo-500/10 border-indigo-500/30';
                 hoverClass = 'hover:text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500/20';
@@ -254,8 +259,11 @@ function NewsItemCard({
                 <motion.button
                   key={type}
                   whileTap={{ scale: 0.9 }}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  whileHover={{ 
+                    scale: 1.08,
+                    rotate: [0, -6, 6, -6, 0],
+                  }}
+                  transition={{ type: "spring", stiffness: 450, damping: 12 }}
                   onClick={() => onReact(type)}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition-all duration-200 min-h-[28px] outline-none focus-visible:ring-1 focus-visible:ring-primary",
@@ -265,15 +273,15 @@ function NewsItemCard({
                   )}
                   aria-label={`React with ${label}`}
                 >
-                  <motion.span
+                  <motion.div
                     key={hasReacted ? `${type}-active` : `${type}-inactive`}
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 12 }}
-                    className="inline-block"
+                    className="inline-flex items-center justify-center"
                   >
-                    {emoji}
-                  </motion.span>
+                    <Icon icon={hasReacted ? activeIconName : iconName} width={16} />
+                  </motion.div>
                   <span className="font-mono text-[11px]">{count}</span>
                 </motion.button>
               );
@@ -325,7 +333,7 @@ function NewsItemCard({
 export default function NewsFeedClient({ articles }: Props) {
   const shouldReduceMotion = useReducedMotion();
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<'all' | 'government' | 'media'>('all');
+  const [category, setCategory] = useState<'all' | 'government' | 'media' | 'unread'>('all');
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   // Infinite Scroll States
@@ -385,8 +393,12 @@ export default function NewsFeedClient({ articles }: Props) {
       if (!matchTitle && !matchDesc && !matchSource) return false;
     }
 
-    // Category filter
-    if (category !== 'all' && item.sourceCategory !== category) return false;
+    // Category and Read/Unread filters
+    if (category === 'unread') {
+      if (readLinks.includes(item.link)) return false;
+    } else if (category !== 'all') {
+      if (item.sourceCategory !== category) return false;
+    }
 
     return true;
   });
@@ -468,10 +480,11 @@ export default function NewsFeedClient({ articles }: Props) {
 
   // Reading Progress computations
   const totalArticlesCount = filteredArticles.length;
-  const readArticlesCount = isMounted 
-    ? filteredArticles.filter(item => readLinks.includes(item.link)).length
+  
+  // Calculate total unread count for badge
+  const totalUnreadCount = isMounted 
+    ? articles.filter(item => !readLinks.includes(item.link)).length
     : 0;
-  const progressPercentage = totalArticlesCount > 0 ? (readArticlesCount / totalArticlesCount) * 100 : 0;
 
   const visibleArticles = filteredArticles.slice(0, visibleCount);
 
@@ -487,33 +500,8 @@ export default function NewsFeedClient({ articles }: Props) {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
-      {/* ── Sticky Progress Bar & Filter Bar ───────────────────── */}
+      {/* ── Sticky Filter Bar ───────────────────── */}
       <div className="sticky top-16 z-30 border-b bg-background/95 py-4 backdrop-blur-sm flex flex-col gap-4">
-        {/* Reading Progress Card */}
-        <div className="flex flex-col gap-2 w-full bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group">
-          {/* Neon background pulse */}
-          <div className="absolute -inset-x-20 -top-20 h-40 bg-gradient-to-r from-primary/10 via-blue-500/10 to-indigo-500/10 blur-3xl opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
-          
-          <div className="flex items-center justify-between text-xs font-semibold relative z-10">
-            <span className="text-muted-foreground flex items-center gap-1.5">
-              <Icon icon="fluent:book-read-20-regular" width={16} className="text-primary" />
-              Reading Stream Progress
-            </span>
-            <span className="text-foreground bg-primary/10 text-primary px-2.5 py-0.5 rounded-full text-[11px] font-bold">
-              Read {readArticlesCount} / {totalArticlesCount} updates
-            </span>
-          </div>
-
-          <div className="w-full bg-muted/60 h-2 rounded-full overflow-hidden relative z-10">
-            <motion.div 
-              className="bg-gradient-to-r from-primary via-blue-500 to-indigo-600 h-full rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercentage}%` }}
-              transition={{ type: "spring", stiffness: 80, damping: 15 }}
-            />
-          </div>
-        </div>
-
         {/* Filter and Search Bar */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Search Input */}
@@ -533,7 +521,7 @@ export default function NewsFeedClient({ articles }: Props) {
             />
           </div>
 
-          {/* Category Pills */}
+          {/* Category & Unread Pills */}
           <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="News categories">
             {(['all', 'government', 'media'] as const).map((cat) => (
               <button
@@ -548,9 +536,34 @@ export default function NewsFeedClient({ articles }: Props) {
                     : 'bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground'
                 )}
               >
-                {cat === 'all' ? 'All Sources' : cat}
+                {cat === 'all' ? 'All' : cat}
               </button>
             ))}
+            
+            {/* Sleek Unread Filter Pill with Count Badge */}
+            <button
+              role="tab"
+              aria-selected={category === 'unread'}
+              onClick={() => setCategory('unread')}
+              className={cn(
+                'rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider border cursor-pointer transition-all duration-200 min-h-[38px] flex items-center gap-1.5 justify-center relative overflow-hidden',
+                category === 'unread'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'bg-card text-muted-foreground border-border hover:bg-muted hover:text-foreground'
+              )}
+            >
+              Unread
+              {totalUnreadCount > 0 && (
+                <span className={cn(
+                  "rounded-full px-1.5 py-0.2 text-[9px] font-bold font-mono transition-colors",
+                  category === 'unread' 
+                    ? "bg-primary-foreground text-primary" 
+                    : "bg-primary text-primary-foreground"
+                )}>
+                  {totalUnreadCount}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
