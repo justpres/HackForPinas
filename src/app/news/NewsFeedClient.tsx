@@ -100,7 +100,7 @@ interface NewsItemCardProps {
   isLast: boolean;
   isRead: boolean;
   onMarkAsRead: () => void;
-  onShare: (url: string) => void;
+  onShare: (title: string, url: string) => void;
   isCopied: boolean;
   reactionData: { like: number; fire: number; rocket: number; userReacted: Record<string, boolean> } | undefined;
   onReact: (type: 'like' | 'fire' | 'rocket') => void;
@@ -473,7 +473,7 @@ function NewsItemCard({
             {/* Copy / Share button */}
             <button
               onClick={() => {
-                onShare(article.link);
+                onShare(article.title, article.link);
                 onMarkAsRead();
               }}
               className={cn(
@@ -613,6 +613,25 @@ export default function NewsFeedClient({ articles }: Props) {
     navigator.clipboard.writeText(url);
     setCopiedUrl(url);
     setTimeout(() => setCopiedUrl(null), 2000);
+  };
+
+  const handleShare = async (title: string, url: string) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: `Check out this tech update: "${title}"`,
+          url: url,
+        });
+        setCopiedUrl(url);
+        setTimeout(() => setCopiedUrl(null), 2000);
+      } catch (err) {
+        console.warn('Native share failed or canceled, copying to clipboard:', err);
+        handleCopy(url);
+      }
+    } else {
+      handleCopy(url);
+    }
   };
 
   const markAsRead = (link: string) => {
@@ -762,7 +781,7 @@ export default function NewsFeedClient({ articles }: Props) {
                   isLast={isLastCard}
                   isRead={readLinks.includes(article.link)}
                   onMarkAsRead={() => markAsRead(article.link)}
-                  onShare={handleCopy}
+                  onShare={handleShare}
                   isCopied={copiedUrl === article.link}
                   reactionData={reactions[article.link]}
                   onReact={(type) => handleReact(article.link, type)}
