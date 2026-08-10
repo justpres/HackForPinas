@@ -3,6 +3,7 @@ import { fetchTechNews, NewsItem } from '@/lib/news';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import NewsFeedClient from './NewsFeedClient';
+import GradientText from '@/components/GradientText';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,8 +82,15 @@ export default async function NewsPage({ searchParams }: PageProps) {
       <main id="main-content" className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4">
           <header className="mb-10 text-center md:text-left">
-            <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl lg:text-5xl bg-gradient-to-r from-primary via-blue-400 to-indigo-500 bg-clip-text text-transparent">
-              Philippine Tech News Feed
+            <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl lg:text-5xl flex justify-center md:justify-start">
+              <GradientText
+                colors={["#5227FF", "#FF9FFC", "#B497CF", "#5227FF"]}
+                animationSpeed={8}
+                showBorder={false}
+                className="font-extrabold"
+              >
+                Philippine Tech News Feed
+              </GradientText>
             </h1>
             <p className="mt-3 text-base text-muted-foreground max-w-2xl">
               Normalized, verified, and filtered RSS updates detailing software development, startup activities, and tech competitions across the country.
