@@ -243,7 +243,7 @@ function NewsItemCard({
       case 'like':
         return 'fluent:thumb-like-16-filled';
       case 'fire':
-        return 'fluent:local-fire-16-filled';
+        return 'fluent:fire-16-filled';
       case 'rocket':
         return 'fluent:rocket-16-filled';
       default:
@@ -398,7 +398,7 @@ function NewsItemCard({
                   >
                     {([
                       { type: 'like', iconName: 'fluent:thumb-like-16-regular', activeIconName: 'fluent:thumb-like-16-filled', label: 'Like', hoverColor: 'hover:text-blue-400 hover:scale-120' },
-                      { type: 'fire', iconName: 'fluent:local-fire-16-regular', activeIconName: 'fluent:local-fire-16-filled', label: 'Fire', hoverColor: 'hover:text-orange-400 hover:scale-120' },
+                      { type: 'fire', iconName: 'fluent:fire-16-regular', activeIconName: 'fluent:fire-16-filled', label: 'Fire', hoverColor: 'hover:text-orange-400 hover:scale-120' },
                       { type: 'rocket', iconName: 'fluent:rocket-16-regular', activeIconName: 'fluent:rocket-16-filled', label: 'Rocket', hoverColor: 'hover:text-indigo-400 hover:scale-120' }
                     ] as const).map((item) => {
                       const hasReacted = reactionData ? !!reactionData.userReacted[item.type] : false;
@@ -443,7 +443,7 @@ function NewsItemCard({
                 {reactionsSummary.map((r) => {
                   let icon = 'fluent:thumb-like-16-filled';
                   let color = 'text-blue-500';
-                  if (r.type === 'fire') { icon = 'fluent:local-fire-16-filled'; color = 'text-orange-500'; }
+                  if (r.type === 'fire') { icon = 'fluent:fire-16-filled'; color = 'text-orange-500'; }
                   if (r.type === 'rocket') { icon = 'fluent:rocket-16-filled'; color = 'text-indigo-500'; }
                   return (
                     <span key={r.type} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/20 px-2 py-0.5 rounded-full border border-border/5">
