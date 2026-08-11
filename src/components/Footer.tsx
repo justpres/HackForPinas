@@ -1,5 +1,11 @@
 import Link from 'next/link';
 
+const quickLinks = [
+  { href: '/about', label: 'About' },
+  { href: '/submit', label: 'Submit Event' },
+  { href: '/docs', label: 'Documentation' },
+];
+
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -18,18 +24,15 @@ export function Footer() {
             Quick Links
           </h4>
           <nav className="flex flex-col gap-2">
-            <Link
-              href="/about"
-              className="text-sm text-muted-foreground transition-colors hover:text-primary"
-            >
-              About
-            </Link>
-            <Link
-              href="/submit"
-              className="text-sm text-muted-foreground transition-colors hover:text-primary"
-            >
-              Submit Event
-            </Link>
+            {quickLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm text-muted-foreground transition-colors hover:text-primary"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
         </div>
 
