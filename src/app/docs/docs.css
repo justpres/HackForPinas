@@ -1,0 +1,83 @@
+.docs-prose {
+  color: var(--foreground);
+}
+
+.docs-prose > :where(p, ul, ol, blockquote, table) {
+  margin-block: 1.25rem;
+  color: var(--muted-foreground);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.docs-prose h2 {
+  scroll-margin-top: 6rem;
+  margin-top: 3.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.docs-prose h3 {
+  scroll-margin-top: 6rem;
+  margin-top: 2.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.docs-prose a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.docs-prose ul, .docs-prose ol {
+  padding-left: 1.5rem;
+}
+
+.docs-prose ul { list-style: disc; }
+.docs-prose ol { list-style: decimal; }
+.docs-prose li + li { margin-top: 0.4rem; }
+
+.docs-prose :not(pre) > code {
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background: color-mix(in oklab, var(--card) 85%, black);
+  padding: 0.12rem 0.35rem;
+  color: var(--foreground);
+  font-size: 0.875em;
+}
+
+.docs-prose blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1rem;
+}
+
+.docs-prose table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  color: var(--foreground);
+}
+
+.docs-prose th, .docs-prose td {
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+}
+
+.docs-prose th { background: var(--card); }
+
+.docs-code-block {
+  margin-top: 1.5rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--border) 85%, white);
+  border-radius: 0.75rem;
+  background: #111;
+  color: #e5e7eb;
+}
+
+.docs-code-block .hljs-keyword, .docs-code-block .hljs-selector-tag { color: #c084fc; }
+.docs-code-block .hljs-string, .docs-code-block .hljs-attr { color: #86efac; }
+.docs-code-block .hljs-number, .docs-code-block .hljs-literal { color: #fbbf24; }
+.docs-code-block .hljs-comment { color: #6b7280; }
+.docs-code-block .hljs-title, .docs-code-block .hljs-function { color: #7dd3fc; }
