@@ -1,5 +1,5 @@
 ---
-title: Welcome to Tambayan
+title: Welcome to HackForPinas
 description: Learn how to discover hackathons, follow their deadlines, and join the community conversation.
 category: Getting Started
 order: 1

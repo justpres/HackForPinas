@@ -518,7 +518,7 @@ export function ChatSidebar() {
                 messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center p-4 text-muted-foreground">
                     <Icon icon="fluent:chat-empty-24-regular" width={32} className="opacity-40 mb-2" />
-                    <p className="text-sm font-semibold">Welcome to the Tambayan!</p>
+                    <p className="text-sm font-semibold">Welcome to HackForPinas!</p>
                     <p className="text-xs mt-1 max-w-[200px]">Be the first to speak. Say hello to fellow PH hackers!</p>
                   </div>
                 ) : (
