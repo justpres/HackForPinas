@@ -2,7 +2,7 @@ name: Daily Hackathon Scraper
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Everyday at 12:00 AM UTC (8:00 AM Philippine Time)
+    - cron: '0 23 * * *' # Everyday at 11:00 PM UTC (7:00 AM Philippine Time)
   workflow_dispatch: # Allows manual trigger from GitHub web UI
 
 jobs:

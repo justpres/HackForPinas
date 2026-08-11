@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { ChatProvider } from "@/components/ChatProvider";
+import { ChatSidebar } from "@/components/ChatSidebar";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +12,7 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
-});
+  });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://hackforpinas.vercel.app'),
@@ -108,7 +110,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-foreground font-sans antialiased" suppressHydrationWarning>
-        {children}
+        <ChatProvider>
+          {children}
+          <ChatSidebar />
+        </ChatProvider>
         <Toaster position="bottom-right" richColors />
       </body>
     </html>
