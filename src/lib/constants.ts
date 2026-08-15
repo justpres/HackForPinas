@@ -43,9 +43,13 @@ export const ALLOWED_REDIRECT_DOMAINS = [
   'facebook.com',
   'fb.com',
   'fb.me',
-  'm.facebook.com'
-  // Note: domain regex patterns for .gov.ph, .edu.ph etc. are handled 
-  // directly in the redirect validator logic for dynamic domains.
+  'm.facebook.com',
+  'lu.ma',
+  'luma.com',
+  'devpost.com',
+  'devfolio.co',
+  'eventbrite.com',
+  'gdg.community.dev'
 ] as const;
 
 /**

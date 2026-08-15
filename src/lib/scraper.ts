@@ -7,7 +7,7 @@ export interface ScrapeSource {
   name: string;
   url: string;
   organizerType: 'government' | 'university' | 'private';
-  strategy: 'wp_api' | 'rss' | 'html' | 'gdg' | 'eventbrite' | 'devpost' | 'devfolio';
+  strategy: 'wp_api' | 'rss' | 'html' | 'gdg' | 'eventbrite' | 'devpost' | 'devfolio' | 'luma';
   defaultRegion?: string;
 }
 
@@ -32,10 +32,13 @@ export const SCRAPE_SOURCES: ScrapeSource[] = [
   { id: 'phildev', name: 'PhilDev', url: 'https://phildev.org', organizerType: 'private', strategy: 'html' },
   { id: 'fb-group', name: 'FB Group PhilHacks', url: 'https://m.facebook.com/groups/philhacks', organizerType: 'private', strategy: 'html' },
   { id: 'fb-page', name: 'FB Page Hackathon PH', url: 'https://m.facebook.com/hackathon.ph', organizerType: 'private', strategy: 'html' },
+  // Luma Philippine Tech & Meetup Events
+  { id: 'luma-manila', name: 'Luma Manila Tech', url: 'https://lu.ma/manila', organizerType: 'private', strategy: 'luma', defaultRegion: 'NCR' },
   // Foreign & Global Hackathon Sources
   { id: 'devpost-global', name: 'Devpost Global', url: 'https://devpost.com/hackathons.rss', organizerType: 'private', strategy: 'devpost', defaultRegion: 'International' },
   { id: 'devfolio-global', name: 'Devfolio Global', url: 'https://api.devfolio.co/api/hackathons', organizerType: 'private', strategy: 'devfolio', defaultRegion: 'International' },
   { id: 'eventbrite-global-online', name: 'Eventbrite Global Online', url: 'https://www.eventbrite.com/d/online/hackathon/', organizerType: 'private', strategy: 'eventbrite', defaultRegion: 'International' },
+  { id: 'luma-global', name: 'Luma Global Hackathons', url: 'https://lu.ma/explore?tag=hackathon', organizerType: 'private', strategy: 'luma', defaultRegion: 'International' },
 ];
 
 interface ScrapeResult {
@@ -66,6 +69,8 @@ export async function runScrapingTask(source: ScrapeSource): Promise<ScrapeResul
         return await scrapeDevpostRss(source);
       case 'devfolio':
         return await scrapeDevfolioApi(source);
+      case 'luma':
+        return await scrapeLumaHtml(source);
       case 'html':
       default:
         return await scrapeHtmlGeneric(source);
@@ -430,7 +435,104 @@ async function scrapeDevfolioApi(source: ScrapeSource): Promise<ScrapeResult[]> 
   return items.slice(0, 10);
 }
 
-// 8. Save Staged Events to Supabase
+// 8. Luma (lu.ma) HTML & JSON-LD Scraper
+async function scrapeLumaHtml(source: ScrapeSource): Promise<ScrapeResult[]> {
+  const res = await fetch(source.url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+    },
+    signal: AbortSignal.timeout(10000)
+  });
+
+  if (!res.ok) throw new Error(`Luma page returned status ${res.status}`);
+
+  const html = await res.text();
+  const $ = cheerio.load(html);
+  const items: ScrapeResult[] = [];
+
+  const techEventRegex = /hackathon|buildathon|competition|coding|challenge|programming|startup|ai|web3|demo day|developer|builder|conference|meetup/i;
+
+  // 1. Extract from JSON-LD scripts
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const scriptText = $(el).html();
+      if (!scriptText) return;
+      const json = JSON.parse(scriptText);
+
+      const rawEvents: any[] = Array.isArray(json)
+        ? json
+        : (json['@type'] === 'Event' ? [json] : (json.itemListElement || []).map((e: any) => e.item || e));
+
+      for (const event of rawEvents) {
+        if (!event || event['@type'] !== 'Event') continue;
+
+        const title = event.name || '';
+        const description = event.description || '';
+
+        if (!techEventRegex.test(title) && !techEventRegex.test(description)) {
+          continue;
+        }
+
+        const isOnline = event.eventAttendanceMode?.includes('Online') || 
+                         event.location?.['@type'] === 'VirtualLocation';
+
+        let imageUrl: string | undefined;
+        if (typeof event.image === 'string') {
+          imageUrl = event.image;
+        } else if (event.image?.url) {
+          imageUrl = event.image.url;
+        }
+
+        items.push({
+          title: title.slice(0, 100),
+          description: description.slice(0, 300) + (description.length > 300 ? '...' : ''),
+          redirect_url: event.url || source.url,
+          source_url: source.url,
+          event_start: event.startDate,
+          event_end: event.endDate,
+          deadline: event.startDate,
+          format: isOnline ? 'online' : 'in-person',
+          region: source.defaultRegion || 'Nationwide',
+          poster_image_url: imageUrl
+        });
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+  });
+
+  // 2. Fallback: Parse card links (e.g. href="/event/..." or href="https://lu.ma/...")
+  if (items.length === 0) {
+    $('a').each((_, el) => {
+      const href = $(el).attr('href');
+      const text = $(el).text().trim();
+      
+      if (href && (href.includes('lu.ma/') || href.startsWith('/event/') || href.startsWith('/e/')) && techEventRegex.test(text)) {
+        let absUrl = href;
+        if (href.startsWith('/')) {
+          absUrl = `https://lu.ma${href}`;
+        }
+
+        if (absUrl !== source.url && text.length > 3 && text.length < 100) {
+          items.push({
+            title: text.slice(0, 100),
+            description: `Tech event on Luma: ${text}`,
+            redirect_url: absUrl,
+            source_url: source.url,
+            format: 'in-person',
+            region: source.defaultRegion || 'NCR'
+          });
+        }
+      }
+    });
+  }
+
+  // Deduplicate results
+  return Array.from(new Map(items.map((item) => [item.redirect_url, item])).values()).slice(0, 10);
+}
+
+// 9. Save Staged Events to Supabase
 export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResult[]) {
   if (events.length === 0) return { inserted: 0, skipped: 0 };
   

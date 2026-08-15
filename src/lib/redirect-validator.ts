@@ -10,13 +10,16 @@ export function isAllowedDomain(url: string): { allowed: boolean; domain: string
     const parsedUrl = new URL(url);
     const hostname = parsedUrl.hostname.toLowerCase();
     
-    // Check against exact domains
-    if (ALLOWED_REDIRECT_DOMAINS.includes(hostname as any)) {
+    // Check against exact domains or subdomains of allowed platforms
+    const isDomainAllowed = ALLOWED_REDIRECT_DOMAINS.some(
+      (d) => hostname === d || hostname.endsWith('.' + d)
+    );
+    if (isDomainAllowed) {
       return { allowed: true, domain: hostname };
     }
 
     // Check for common Philippine domains
-    if (hostname.endsWith('.gov.ph') || hostname.endsWith('.edu.ph')) {
+    if (hostname.endsWith('.gov.ph') || hostname.endsWith('.edu.ph') || hostname.endsWith('.ph')) {
       return { allowed: true, domain: hostname };
     }
 

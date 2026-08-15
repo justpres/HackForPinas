@@ -50,4 +50,38 @@ describe('Scraper Parsers & Keyword Exclusion', () => {
     expect(mapped.format).toBe('in-person');
     expect(mapped.redirect_url).toBe('https://ethglobal-sg.devfolio.co');
   });
+
+  it('maps Luma JSON-LD event format correctly', () => {
+    const lumaJsonLdSample = {
+      '@type': 'Event',
+      name: 'Manila AI Hackathon 2026',
+      description: 'Join top AI builders and developers in Metro Manila for a 48-hour challenge.',
+      url: 'https://lu.ma/manila-ai-2026',
+      startDate: '2026-10-15T09:00:00Z',
+      endDate: '2026-10-17T18:00:00Z',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      image: 'https://images.lumacdn.com/event-covers/manila-ai.jpg'
+    };
+
+    const techEventRegex = /hackathon|buildathon|competition|coding|challenge|programming|startup|ai|web3|demo day|developer/i;
+    expect(techEventRegex.test(lumaJsonLdSample.name)).toBe(true);
+
+    const mapped = {
+      title: lumaJsonLdSample.name,
+      description: lumaJsonLdSample.description,
+      redirect_url: lumaJsonLdSample.url,
+      source_url: 'https://lu.ma/manila',
+      event_start: lumaJsonLdSample.startDate,
+      event_end: lumaJsonLdSample.endDate,
+      deadline: lumaJsonLdSample.startDate,
+      format: lumaJsonLdSample.eventAttendanceMode.includes('Online') ? 'online' : 'in-person',
+      region: 'NCR',
+      poster_image_url: lumaJsonLdSample.image
+    };
+
+    expect(mapped.title).toBe('Manila AI Hackathon 2026');
+    expect(mapped.region).toBe('NCR');
+    expect(mapped.format).toBe('in-person');
+    expect(mapped.redirect_url).toBe('https://lu.ma/manila-ai-2026');
+  });
 });

@@ -22,6 +22,20 @@ describe('Redirect Validator Unit Tests', () => {
     expect(res2.allowed).toBe(true);
   });
 
+  it('allows verified platform domains including Luma, Devpost, and Devfolio', () => {
+    const lumaRes = isAllowedDomain('https://lu.ma/manila-ai-hackathon');
+    expect(lumaRes.allowed).toBe(true);
+
+    const lumaSubdomain = isAllowedDomain('https://ethmanila.lu.ma/event');
+    expect(lumaSubdomain.allowed).toBe(true);
+
+    const devpostRes = isAllowedDomain('https://devpost.com/software/hackforpinas');
+    expect(devpostRes.allowed).toBe(true);
+
+    const devfolioRes = isAllowedDomain('https://hackph.devfolio.co');
+    expect(devfolioRes.allowed).toBe(true);
+  });
+
   it('rejects disallowed arbitrary domains', () => {
     const res = isAllowedDomain('https://malicious-phishing-site.xyz/login');
     expect(res.allowed).toBe(false);
