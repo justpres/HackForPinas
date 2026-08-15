@@ -7,7 +7,8 @@ export interface ScrapeSource {
   name: string;
   url: string;
   organizerType: 'government' | 'university' | 'private';
-  strategy: 'wp_api' | 'rss' | 'html' | 'gdg' | 'eventbrite';
+  strategy: 'wp_api' | 'rss' | 'html' | 'gdg' | 'eventbrite' | 'devpost' | 'devfolio';
+  defaultRegion?: string;
 }
 
 export const SCRAPE_SOURCES: ScrapeSource[] = [
@@ -31,6 +32,10 @@ export const SCRAPE_SOURCES: ScrapeSource[] = [
   { id: 'phildev', name: 'PhilDev', url: 'https://phildev.org', organizerType: 'private', strategy: 'html' },
   { id: 'fb-group', name: 'FB Group PhilHacks', url: 'https://m.facebook.com/groups/philhacks', organizerType: 'private', strategy: 'html' },
   { id: 'fb-page', name: 'FB Page Hackathon PH', url: 'https://m.facebook.com/hackathon.ph', organizerType: 'private', strategy: 'html' },
+  // Foreign & Global Hackathon Sources
+  { id: 'devpost-global', name: 'Devpost Global', url: 'https://devpost.com/hackathons.rss', organizerType: 'private', strategy: 'devpost', defaultRegion: 'International' },
+  { id: 'devfolio-global', name: 'Devfolio Global', url: 'https://api.devfolio.co/api/hackathons', organizerType: 'private', strategy: 'devfolio', defaultRegion: 'International' },
+  { id: 'eventbrite-global-online', name: 'Eventbrite Global Online', url: 'https://www.eventbrite.com/d/online/hackathon/', organizerType: 'private', strategy: 'eventbrite', defaultRegion: 'International' },
 ];
 
 interface ScrapeResult {
@@ -57,6 +62,10 @@ export async function runScrapingTask(source: ScrapeSource): Promise<ScrapeResul
         return await scrapeGdgApi(source);
       case 'eventbrite':
         return await scrapeEventbriteHtml(source);
+      case 'devpost':
+        return await scrapeDevpostRss(source);
+      case 'devfolio':
+        return await scrapeDevfolioApi(source);
       case 'html':
       default:
         return await scrapeHtmlGeneric(source);
@@ -319,7 +328,109 @@ async function scrapeHtmlGeneric(source: ScrapeSource): Promise<ScrapeResult[]> 
   return uniqueItems.slice(0, 8); // Cap to avoid flooding reviews
 }
 
-// 6. Save Staged Events to Supabase
+// 6. Devpost Global RSS Scraper
+async function scrapeDevpostRss(source: ScrapeSource): Promise<ScrapeResult[]> {
+  const queryUrl = source.url;
+  const res = await fetch(queryUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    },
+    signal: AbortSignal.timeout(10000)
+  });
+  if (!res.ok) throw new Error(`Devpost RSS returned status ${res.status}`);
+
+  const xmlText = await res.text();
+  const items: ScrapeResult[] = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match;
+
+  // Keyword check to filter out localized Philippine events from foreign crawl
+  const phFilterRegex = /\b(philippines|filipino|taguig|makati|manila|cebu|davao|quezon city|dost|dict)\b/i;
+
+  while ((match = itemRegex.exec(xmlText)) !== null) {
+    const content = match[1];
+    if (!content) continue;
+
+    const title = content.match(/<title>([\s\S]*?)<\/title>/)?.[1]
+      ?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, '$1')
+      ?.replace(/&#\d+;/g, '')
+      ?.trim();
+
+    const link = content.match(/<link>([\s\S]*?)<\/link>/)?.[1]
+      ?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, '$1')
+      ?.trim();
+
+    const rawDesc = content.match(/<description>([\s\S]*?)<\/description>/)?.[1]
+      ?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, '$1') || '';
+
+    // Extract image from description or enclosure
+    const enclosureImg = content.match(/<enclosure[^>]+url="([^">]+)"/)?.[1];
+    const descImgMatch = rawDesc.match(/<img[^>]+src="([^">]+)"/)?.[1];
+    const poster = enclosureImg || descImgMatch;
+
+    const cleanDesc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const pubDate = content.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim();
+
+    // Skip if it contains Philippine tags
+    if (phFilterRegex.test(title || '') || phFilterRegex.test(cleanDesc)) {
+      continue;
+    }
+
+    if (title && link) {
+      items.push({
+        title,
+        description: cleanDesc.slice(0, 300) + (cleanDesc.length > 300 ? '...' : ''),
+        redirect_url: link,
+        source_url: 'https://devpost.com',
+        event_start: pubDate ? new Date(pubDate).toISOString() : undefined,
+        format: 'online',
+        region: 'International',
+        poster_image_url: poster
+      });
+    }
+  }
+
+  return items.slice(0, 10);
+}
+
+// 7. Devfolio Global JSON API Scraper
+async function scrapeDevfolioApi(source: ScrapeSource): Promise<ScrapeResult[]> {
+  const queryUrl = 'https://api.devfolio.co/api/hackathons?filter=open&page=1&size=15';
+  const res = await fetch(queryUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    },
+    signal: AbortSignal.timeout(10000)
+  });
+  if (!res.ok) throw new Error(`Devfolio API returned status ${res.status}`);
+
+  const data = await res.json();
+  const hackathons = data.result || [];
+  if (!Array.isArray(hackathons)) return [];
+
+  const items: ScrapeResult[] = [];
+  for (const h of hackathons) {
+    const loc = (h.location || '').toLowerCase();
+    // Exclude Philippine-only events from foreign crawler
+    if (loc.includes('philippines') || loc.includes('manila')) continue;
+
+    items.push({
+      title: h.name || 'Devfolio Hackathon',
+      description: (h.tagline || h.description || '').slice(0, 300),
+      redirect_url: h.slug ? `https://${h.slug}.devfolio.co` : source.url,
+      source_url: 'https://devfolio.co',
+      event_start: h.starts_at,
+      event_end: h.ends_at,
+      format: h.is_online ? 'online' : 'in-person',
+      region: 'International',
+      poster_image_url: h.banner_url || h.logo
+    });
+  }
+
+  return items.slice(0, 10);
+}
+
+// 8. Save Staged Events to Supabase
 export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResult[]) {
   if (events.length === 0) return { inserted: 0, skipped: 0 };
   
@@ -393,6 +504,9 @@ export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResu
         posterUrl = await scrapeOpenGraphImage(event.redirect_url);
       }
 
+      // Assign region (fallback to source.defaultRegion -> Nationwide)
+      const eventRegion = event.region || source.defaultRegion || 'Nationwide';
+
       // Default values mapping
       const { data: newHack, error } = await supabase
         .from('hackathons')
@@ -402,11 +516,11 @@ export async function saveScrapedEvents(source: ScrapeSource, events: ScrapeResu
           organizer_id: organizerId,
           redirect_url: event.redirect_url,
           source_url: event.source_url,
-          region: event.region || 'all',
+          region: eventRegion,
           format: event.format || 'online',
           event_start: eventStart,
           event_end: eventEnd,
-          deadline: eventStart, // fallback deadline to start if missing
+          deadline: eventStart || new Date().toISOString(), // fallback deadline to start if missing
           source_type: 'official_site',
           status: 'published',
           poster_image_url: posterUrl

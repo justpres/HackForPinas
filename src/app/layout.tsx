@@ -3,6 +3,8 @@ import { Inter, Geist } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ChatProvider } from "@/components/ChatProvider";
 import { ChatSidebar } from "@/components/ChatSidebar";
+import { Suspense } from "react";
+import { LoadingBar } from "@/components/LoadingBar";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +112,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-foreground font-sans antialiased" suppressHydrationWarning>
+        <Suspense fallback={null}>
+          <LoadingBar />
+        </Suspense>
         <ChatProvider>
           {children}
           <ChatSidebar />

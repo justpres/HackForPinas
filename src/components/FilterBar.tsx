@@ -27,6 +27,7 @@ export function FilterBar({ filters, onChange, resultCount }: FilterBarProps) {
   };
 
   const activeFilterCount =
+    (filters.scope && filters.scope !== 'all' ? 1 : 0) +
     (filters.region && filters.region !== 'all' ? 1 : 0) +
     (filters.format && filters.format !== 'all' ? 1 : 0) +
     (filters.organizer_type && filters.organizer_type !== 'all' ? 1 : 0);
@@ -34,6 +35,46 @@ export function FilterBar({ filters, onChange, resultCount }: FilterBarProps) {
   return (
     <div className="sticky top-16 z-30 border-b bg-background/95 py-3 backdrop-blur-sm">
       <div className="container mx-auto px-4">
+        {/* Scope Tabs */}
+        <div className="flex items-center gap-1.5 mb-3 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            type="button"
+            onClick={() => onChange({ scope: 'all' })}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0",
+              (!filters.scope || filters.scope === 'all')
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            All Events
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange({ scope: 'philippines' })}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 flex items-center gap-1.5",
+              filters.scope === 'philippines'
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            <span>🇵🇭</span> Philippine Tech Events
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange({ scope: 'international' })}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 flex items-center gap-1.5",
+              filters.scope === 'international'
+                ? "bg-primary text-primary-foreground shadow-xs"
+                : "bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            <span>🌐</span> Global / Foreign
+          </button>
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-sm">
             <Icon

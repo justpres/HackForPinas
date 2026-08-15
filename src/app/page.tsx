@@ -71,12 +71,17 @@ export default async function HomePage() {
               }
             : {
                 '@type': 'Place',
-                'name': event.region,
-                'address': {
-                  '@type': 'PostalAddress',
-                  'addressCountry': 'PH',
-                  'addressRegion': event.region,
-                },
+                'name': event.region === 'International' ? 'Global' : event.region,
+                'address': event.region === 'International'
+                  ? {
+                      '@type': 'PostalAddress',
+                      'name': 'International',
+                    }
+                  : {
+                      '@type': 'PostalAddress',
+                      'addressCountry': 'PH',
+                      'addressRegion': event.region,
+                    },
               },
         'organizer': {
           '@type': 'Organization',

@@ -96,12 +96,19 @@ export function EventCard({ event, className }: EventCardProps) {
           </div>
 
           <div className="mt-auto flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center gap-1 rounded-sm bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              <Icon icon="fluent:location-16-regular" width={16} />
-              {event.region}
-            </div>
-            <div className="inline-flex items-center gap-1 rounded-sm bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              <Icon icon={getFormatIcon(event.format)} width={16} />
+            {event.region === 'International' ? (
+              <div className="inline-flex items-center gap-1 rounded-sm bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2 py-0.5 text-xs font-medium">
+                <Icon icon="fluent:globe-16-regular" width={14} />
+                Global Event
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1 rounded-sm bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                <Icon icon="fluent:location-16-regular" width={14} />
+                {event.region}
+              </div>
+            )}
+            <div className="inline-flex items-center gap-1 rounded-sm bg-muted px-2 py-0.5 text-xs text-muted-foreground capitalize">
+              <Icon icon={getFormatIcon(event.format)} width={14} />
               {event.format}
             </div>
           </div>

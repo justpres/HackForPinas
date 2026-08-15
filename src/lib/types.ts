@@ -42,6 +42,7 @@ export interface SubmissionAuditLog {
 }
 
 export interface FilterState {
+  scope?: 'all' | 'philippines' | 'international';
   region: string;
   format: string;
   organizer_type: string;

@@ -19,7 +19,8 @@ export const REGIONS = [
   'Region XII (SOCCSKSARGEN)',
   'Region XIII (Caraga)',
   'BARMM',
-  'Nationwide'
+  'Nationwide',
+  'International'
 ] as const;
 
 export const FORMATS = ['online', 'in-person', 'hybrid'] as const;
