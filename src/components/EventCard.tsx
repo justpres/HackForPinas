@@ -8,6 +8,7 @@ import { HackathonWithOrganizer } from '@/lib/types';
 import { CountdownBadge } from '@/components/CountdownBadge';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { GenerativePattern } from '@/components/GenerativePattern';
+import { isPhilippineHackathon, formatRegionDisplay } from '@/lib/constants';
 
 interface EventCardProps {
   event: HackathonWithOrganizer;
@@ -17,6 +18,8 @@ interface EventCardProps {
 export function EventCard({ event, className }: EventCardProps) {
   const shouldReduceMotion = useReducedMotion();
   const hasImage = !!event.poster_image_url;
+  const isPh = isPhilippineHackathon(event);
+  const formattedRegion = formatRegionDisplay(event.region, isPh);
 
   const getFormatIcon = (format: string) => {
     switch (format.toLowerCase()) {
@@ -76,6 +79,20 @@ export function EventCard({ event, className }: EventCardProps) {
               </div>
             </div>
           )}
+
+          {/* Scope Indicator Badge (Top Left) */}
+          <div className="absolute left-2 top-2">
+            {isPh ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/75 text-emerald-300 border border-emerald-500/40 backdrop-blur-md px-2 py-0.5 text-xs font-semibold shadow-xs">
+                🇵🇭 PH Event
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/75 text-blue-300 border border-blue-500/40 backdrop-blur-md px-2 py-0.5 text-xs font-medium shadow-xs">
+                🌐 Global Event
+              </span>
+            )}
+          </div>
+
           <div className="absolute right-2 top-2">
             <CountdownBadge deadline={event.deadline} />
           </div>
@@ -96,17 +113,15 @@ export function EventCard({ event, className }: EventCardProps) {
           </div>
 
           <div className="mt-auto flex flex-wrap items-center gap-2">
-            {event.region === 'International' ? (
-              <div className="inline-flex items-center gap-1 rounded-sm bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2 py-0.5 text-xs font-medium">
-                <Icon icon="fluent:globe-16-regular" width={14} />
-                Global Event
-              </div>
-            ) : (
-              <div className="inline-flex items-center gap-1 rounded-sm bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                <Icon icon="fluent:location-16-regular" width={14} />
-                {event.region}
-              </div>
-            )}
+            <div className={cn(
+              "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium",
+              isPh 
+                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
+                : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+            )}>
+              <Icon icon={isPh ? "fluent:location-16-regular" : "fluent:globe-16-regular"} width={14} />
+              {formattedRegion}
+            </div>
             <div className="inline-flex items-center gap-1 rounded-sm bg-muted px-2 py-0.5 text-xs text-muted-foreground capitalize">
               <Icon icon={getFormatIcon(event.format)} width={14} />
               {event.format}

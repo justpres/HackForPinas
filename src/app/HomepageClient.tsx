@@ -6,6 +6,7 @@ import { Icon } from '@iconify/react';
 import { HackathonWithOrganizer, FilterState } from '@/lib/types';
 import { FilterBar } from '@/components/FilterBar';
 import { EventCard } from '@/components/EventCard';
+import { isPhilippineHackathon } from '@/lib/constants';
 
 interface Props {
   events: HackathonWithOrganizer[];
@@ -26,10 +27,11 @@ export default function HomepageClient({ events }: Props) {
     const oneDayMs = 24 * 60 * 60 * 1000;
 
     return events.filter((event) => {
+      const isPh = isPhilippineHackathon(event);
+
       // Scope Filter (All vs Philippines Only vs International / Foreign Only)
-      const isInternational = event.region === 'International';
-      if (filters.scope === 'philippines' && isInternational) return false;
-      if (filters.scope === 'international' && !isInternational) return false;
+      if (filters.scope === 'philippines' && !isPh) return false;
+      if (filters.scope === 'international' && isPh) return false;
 
       // Search
       if (filters.search) {
@@ -51,8 +53,8 @@ export default function HomepageClient({ events }: Props) {
 
       return true;
     }).sort((a, b) => {
-      const isAInternational = a.region === 'International';
-      const isBInternational = b.region === 'International';
+      const isAPh = isPhilippineHackathon(a);
+      const isBPh = isPhilippineHackathon(b);
 
       const aDeadline = a.deadline ? new Date(a.deadline).getTime() : 0;
       const bDeadline = b.deadline ? new Date(b.deadline).getTime() : 0;
@@ -69,15 +71,15 @@ export default function HomepageClient({ events }: Props) {
       // Tier 2: Foreign/Global Active / Upcoming (Ongoing & Upcoming Global Hackathons)
       // Tier 3: Philippine Past / Concluded
       // Tier 4: Foreign/Global Past / Concluded
-      const getTier = (isInternational: boolean, isActive: boolean) => {
-        if (!isInternational && isActive) return 1;
-        if (isInternational && isActive) return 2;
-        if (!isInternational && !isActive) return 3;
+      const getTier = (isPh: boolean, isActive: boolean) => {
+        if (isPh && isActive) return 1;
+        if (!isPh && isActive) return 2;
+        if (isPh && !isActive) return 3;
         return 4;
       };
 
-      const tierA = getTier(isAInternational, isAActive);
-      const tierB = getTier(isBInternational, isBActive);
+      const tierA = getTier(isAPh, isAActive);
+      const tierB = getTier(isBPh, isBActive);
 
       if (tierA !== tierB) {
         return tierA - tierB;

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { HackathonWithOrganizer } from '@/lib/types';
+import { isPhilippineHackathon, formatRegionDisplay } from '@/lib/constants';
 
 describe('Event Prioritization & Sorting Algorithm', () => {
   const now = new Date('2026-08-15T00:00:00Z').getTime();
@@ -110,8 +111,8 @@ describe('Event Prioritization & Sorting Algorithm', () => {
 
   function sortEvents(events: HackathonWithOrganizer[], sortType: 'deadline' | 'newest' = 'deadline') {
     return [...events].sort((a, b) => {
-      const isAInternational = a.region === 'International';
-      const isBInternational = b.region === 'International';
+      const isAPh = isPhilippineHackathon(a);
+      const isBPh = isPhilippineHackathon(b);
 
       const aDeadline = a.deadline ? new Date(a.deadline).getTime() : 0;
       const bDeadline = b.deadline ? new Date(b.deadline).getTime() : 0;
@@ -122,15 +123,15 @@ describe('Event Prioritization & Sorting Algorithm', () => {
       const isAActive = (aEnd || aDeadline) >= (now - oneDayMs);
       const isBActive = (bEnd || bDeadline) >= (now - oneDayMs);
 
-      const getTier = (isInternational: boolean, isActive: boolean) => {
-        if (!isInternational && isActive) return 1;
-        if (isInternational && isActive) return 2;
-        if (!isInternational && !isActive) return 3;
+      const getTier = (isPh: boolean, isActive: boolean) => {
+        if (isPh && isActive) return 1;
+        if (!isPh && isActive) return 2;
+        if (isPh && !isActive) return 3;
         return 4;
       };
 
-      const tierA = getTier(isAInternational, isAActive);
-      const tierB = getTier(isBInternational, isBActive);
+      const tierA = getTier(isAPh, isAActive);
+      const tierB = getTier(isBPh, isBActive);
 
       if (tierA !== tierB) {
         return tierA - tierB;
@@ -162,13 +163,21 @@ describe('Event Prioritization & Sorting Algorithm', () => {
     expect(sortedIds[4]).toBe('5');
   });
 
-  it('filters by scope correctly', () => {
-    const phOnly = mockEvents.filter((e) => e.region !== 'International');
-    expect(phOnly.every((e) => e.region !== 'International')).toBe(true);
+  it('filters by scope correctly with isPhilippineHackathon', () => {
+    const phOnly = mockEvents.filter((e) => isPhilippineHackathon(e));
+    expect(phOnly.every((e) => isPhilippineHackathon(e))).toBe(true);
     expect(phOnly.length).toBe(3);
 
-    const intlOnly = mockEvents.filter((e) => e.region === 'International');
-    expect(intlOnly.every((e) => e.region === 'International')).toBe(true);
+    const intlOnly = mockEvents.filter((e) => !isPhilippineHackathon(e));
+    expect(intlOnly.every((e) => !isPhilippineHackathon(e))).toBe(true);
     expect(intlOnly.length).toBe(2);
+  });
+
+  it('formats region display specifically with Philippine flag and nationwide clarity', () => {
+    expect(formatRegionDisplay('Nationwide', true)).toBe('🇵🇭 Philippines (Nationwide)');
+    expect(formatRegionDisplay('all', true)).toBe('🇵🇭 Philippines (Nationwide)');
+    expect(formatRegionDisplay('NCR', true)).toBe('🇵🇭 NCR');
+    expect(formatRegionDisplay('Region VII', true)).toBe('🇵🇭 Region VII');
+    expect(formatRegionDisplay('International', false)).toBe('🌐 Global / Foreign');
   });
 });
