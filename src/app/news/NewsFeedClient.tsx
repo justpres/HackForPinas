@@ -143,12 +143,12 @@ function NewsItemCard({
     };
   }, [showShareMenu]);
 
-  // Auto mark as read on hover/focus after 2s
+  // Auto mark as read on hover/focus after 1.5s
   const startReadTimer = () => {
     if (!isRead && !hoverTimerRef.current) {
       hoverTimerRef.current = setTimeout(() => {
         onMarkAsRead();
-      }, 2000);
+      }, 1500);
     }
   };
 
@@ -158,6 +158,42 @@ function NewsItemCard({
       hoverTimerRef.current = null;
     }
   };
+
+  // Viewport reading detection (marks as read when user stops scrolling on article for 1.5s)
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isRead) return;
+
+    let viewTimer: NodeJS.Timeout | null = null;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+            if (!viewTimer) {
+              viewTimer = setTimeout(() => {
+                onMarkAsRead();
+              }, 1500);
+            }
+          } else {
+            if (viewTimer) {
+              clearTimeout(viewTimer);
+              viewTimer = null;
+            }
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+      if (viewTimer) clearTimeout(viewTimer);
+    };
+  }, [isRead, onMarkAsRead]);
 
   // Hover triggers for the Facebook-style Reaction Tray (500ms enter delay, 200ms leave delay)
   const handleTriggerMouseEnter = () => {
@@ -299,6 +335,7 @@ function NewsItemCard({
 
   return (
     <motion.div
+      ref={cardRef}
       id={`news-card-${encodeURIComponent(article.link)}`}
       variants={{ hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } }}
       transition={{ duration: 0.25 }}
@@ -341,12 +378,12 @@ function NewsItemCard({
       <div className="flex-1 pb-10 flex flex-col gap-2">
         {/* Metadata Header */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          {/* Glowing Unread Indicator Dot */}
+          {/* Static Red Unread Indicator Dot */}
           {!isRead && (
-            <span className="relative flex h-2 w-2 mr-0.5" title="Unread Article">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
+            <span
+              className="inline-block h-2 w-2 rounded-full bg-red-500 mr-0.5 shrink-0"
+              title="Unread Article"
+            />
           )}
           <span className={cn(
             'font-bold px-1.5 py-0.5 rounded border text-[9px] uppercase tracking-wider',

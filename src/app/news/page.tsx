@@ -82,10 +82,14 @@ export default async function NewsPage({ searchParams }: PageProps) {
       <main id="main-content" className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4">
           <header className="mb-10 text-center md:text-left">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-3">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              🇵🇭 Live Philippine Tech Feed
+            </div>
             <h1 className="text-3xl font-extrabold tracking-tight md:text-4xl lg:text-5xl flex justify-center md:justify-start">
               <GradientText
-                colors={["#5227FF", "#FF9FFC", "#B497CF", "#5227FF"]}
-                animationSpeed={8}
+                colors={["#60A5FA", "#38BDF8", "#818CF8", "#60A5FA"]}
+                animationSpeed={6}
                 showBorder={false}
                 className="font-extrabold"
               >

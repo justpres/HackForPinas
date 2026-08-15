@@ -9,12 +9,14 @@
   font-weight: 500;
   backdrop-filter: blur(10px);
   transition: box-shadow 0.5s ease-out;
-  overflow: hidden;
-  cursor: pointer;
+  overflow: visible;
+  cursor: inherit;
 }
 
 .animated-gradient-text.with-border {
   padding: 0.35rem 0.75rem;
+  overflow: hidden;
+  cursor: pointer;
 }
 
 .gradient-overlay {
@@ -44,6 +46,8 @@
 .text-content {
   display: inline-block;
   position: relative;
+  padding-right: 0.15em;
+  padding-left: 0.02em;
   z-index: 2;
   background-clip: text;
   -webkit-background-clip: text;
