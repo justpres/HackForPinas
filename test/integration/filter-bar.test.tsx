@@ -1,0 +1,44 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { FilterBar } from '@/components/FilterBar';
+import { FilterState } from '@/lib/types';
+
+describe('FilterBar Component Integration', () => {
+  const defaultFilters: FilterState = {
+    scope: 'all',
+    region: 'all',
+    format: 'all',
+    organizer_type: 'all',
+    sort: 'deadline',
+    search: '',
+  };
+
+  it('renders all scope tabs', () => {
+    const onChange = vi.fn();
+    render(<FilterBar filters={defaultFilters} onChange={onChange} resultCount={10} />);
+
+    expect(screen.getByText('All Events')).toBeDefined();
+    expect(screen.getByText('Philippine Tech Events')).toBeDefined();
+    expect(screen.getByText('Global / Foreign')).toBeDefined();
+  });
+
+  it('calls onChange with scope when clicked', () => {
+    const onChange = vi.fn();
+    render(<FilterBar filters={defaultFilters} onChange={onChange} resultCount={10} />);
+
+    const phButton = screen.getByText('Philippine Tech Events');
+    fireEvent.click(phButton);
+    expect(onChange).toHaveBeenCalledWith({ scope: 'philippines' });
+
+    const globalButton = screen.getByText('Global / Foreign');
+    fireEvent.click(globalButton);
+    expect(onChange).toHaveBeenCalledWith({ scope: 'international' });
+  });
+
+  it('displays accurate result count', () => {
+    const onChange = vi.fn();
+    render(<FilterBar filters={defaultFilters} onChange={onChange} resultCount={42} />);
+
+    expect(screen.getByText('42 events found')).toBeDefined();
+  });
+});
