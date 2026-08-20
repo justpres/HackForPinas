@@ -1,15 +1,15 @@
+import './test/setup.mjs';
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
     environmentMatchGlobs: [
-      ['**/*.tsx', 'jsdom'],
+      ['**/*.test.tsx', 'jsdom'],
     ],
     include: ['test/unit/**/*.test.{ts,tsx}', 'test/integration/**/*.test.{ts,tsx}'],
-    setupFiles: [],
+    setupFiles: ['./test/setup.mjs'],
   },
   resolve: {
     alias: {
