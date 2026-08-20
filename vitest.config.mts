@@ -4,7 +4,10 @@ import path from 'path';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'node',
+    environmentMatchGlobs: [
+      ['**/*.tsx', 'jsdom'],
+    ],
     include: ['test/unit/**/*.test.{ts,tsx}', 'test/integration/**/*.test.{ts,tsx}'],
     setupFiles: [],
   },
