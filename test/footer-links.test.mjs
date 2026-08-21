@@ -23,15 +23,15 @@ function loadFooter() {
     fileName: filename,
   });
 
-  const module = { exports: {} };
+  const mockModule = { exports: {} };
   vm.runInNewContext(transpiled.outputText, {
     console,
-    exports: module.exports,
-    module,
+    exports: mockModule.exports,
+    module: mockModule,
     require,
   });
 
-  return module.exports.Footer;
+  return mockModule.exports.Footer;
 }
 
 test('footer quick links include Documentation directly after Submit Event', () => {

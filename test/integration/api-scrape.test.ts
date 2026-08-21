@@ -23,4 +23,31 @@ describe('API Route /api/scrape Integration', () => {
     expect(json.success).toBe(true);
     expect(json.processedCount).toBe(0);
   });
+
+  it('accepts authorization with valid Bearer token header', async () => {
+    const secretKey = process.env.CRON_SECRET || 'local_development_secret';
+    const req = new NextRequest('http://localhost:3000/api/scrape?limit=0', {
+      headers: {
+        Authorization: `Bearer ${secretKey}`,
+      },
+    });
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.processedCount).toBe(0);
+  });
+
+  it('handles offset parameter pagination correctly', async () => {
+    const secretKey = process.env.CRON_SECRET || 'local_development_secret';
+    const req = new NextRequest(`http://localhost:3000/api/scrape?key=${secretKey}&offset=0&limit=0`);
+    const res = await GET(req);
+
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.processedCount).toBe(0);
+    expect(json.nextOffset).toBeDefined();
+  });
 });
